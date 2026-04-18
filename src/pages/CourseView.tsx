@@ -148,9 +148,13 @@ export default function CourseView() {
     }
   };
 
-  const triggerLabGeneration = async (moduleId: string) => {
+  const triggerLabGeneration = async (moduleId: string, force = false) => {
     if (generatingLabs.has(moduleId)) return;
     setGeneratingLabs(prev => new Set(prev).add(moduleId));
+    if (force) {
+      await supabase.from("course_modules").update({ lab_generation_status: "pending" }).eq("id", moduleId);
+      setModules(prev => prev.map(m => m.id === moduleId ? { ...m, lab_generation_status: "pending" } : m));
+    }
     try {
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-lab-blueprint`, {
         method: "POST",
@@ -158,7 +162,7 @@ export default function CourseView() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
-        body: JSON.stringify({ moduleId }),
+        body: JSON.stringify({ moduleId, force }),
       });
       if (resp.ok) {
         const { data } = await supabase
@@ -440,7 +444,7 @@ export default function CourseView() {
                           labError={mod.lab_error}
                           onComplete={handleLabComplete}
                           isCompleted={getSectionDone(mod.id, "lab")}
-                          onRetryGeneration={() => triggerLabGeneration(mod.id)}
+                          onRetryGeneration={() => triggerLabGeneration(mod.id, true)}
                           onReplay={handleLabReplay}
                         />
                       )}
