@@ -1141,7 +1141,7 @@ serve(async (req) => {
       simulationTool, graphTool, flowchartTool, codeDebuggerTool,
       matchingTool, orderingTool, scenarioBuilderTool,
       highlightSelectTool, debateBuilderTool, budgetAllocatorTool,
-      cohesiveTool,
+      cohesiveTool, scene3DTool,
     ];
 
     const domainTemplates = selectDomainTemplate(topic, moduleTitle, lessonContent);
