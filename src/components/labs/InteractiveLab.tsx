@@ -194,9 +194,9 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
     const normalizedData = hasBlocks ? labData : convertLegacyToBlocks(labData);
     return (
       <Lab3DCard>
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* floating 3D orbs — code-split, loads asynchronously */}
-          <div className="absolute inset-0 pointer-events-none" aria-hidden>
+        {/* Particle orbs rendered ABOVE content at low opacity so they're actually visible */}
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-violet-950/30 via-indigo-950/20 to-slate-950/30">
+          <div className="absolute inset-0 pointer-events-none z-20 opacity-40 mix-blend-screen" aria-hidden>
             <Suspense fallback={null}>
               <Lab3DParticles />
             </Suspense>
