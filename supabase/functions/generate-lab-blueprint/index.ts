@@ -1161,6 +1161,7 @@ You have 10 activity formats to choose from. Pick the ONE that will be most enga
 9. create_debate_builder_lab — Sort statements into For/Against. Best for: ethics, policy debates, persuasive reasoning, pros/cons analysis, history perspectives.
 10. create_budget_allocator_lab — Distribute 100% across categories with sliders. Best for: resource allocation, government/personal finance, tradeoff decisions, policy design.
 11. create_cohesive_lab — Multi-activity narrative lab with 4-5 sequential activities, persistent metrics, unlock progression, and a final grade. Best for: rich complex topics where one activity isn't enough — history, ethics, complex science, business strategy, social issues, any topic that benefits from a story arc.
+12. create_scene_3d_lab — Interactive 3D scene: students rotate/explore labeled 3D objects, click to learn, then answer a quiz by clicking objects. Best for: cell organelles, solar system, atomic structure, molecular bonds, brain regions, body anatomy, ecosystems, architecture — any topic understood through spatial/3D structure.
 
 SELECTION GUIDELINES:
 - Choose the format that makes the lesson concept come alive as an activity
