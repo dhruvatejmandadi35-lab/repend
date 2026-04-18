@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, AlertTriangle } from "lucide-react";
@@ -12,6 +13,9 @@ import HighlightSelectLab from "./HighlightSelectLab";
 import DebateBuilderLab from "./DebateBuilderLab";
 import BudgetAllocatorLab from "./BudgetAllocatorLab";
 import CohesiveLab from "./CohesiveLab";
+import Lab3DCard from "./Lab3DCard";
+
+const Lab3DParticles = lazy(() => import("./Lab3DParticles"));
 
 type Props = {
   labType?: string | null;
@@ -149,46 +153,60 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
     return <LabEmptyState labType={effectiveLabType} detail={detail} onRetry={onRetryGeneration} />;
   }
 
-  // Route to specialized lab renderers based on lab_type
+  // Route to specialized lab renderers — all wrapped in Lab3DCard for 3D tilt + glow
   if (effectiveLabType === "flowchart") {
-    return <FlowchartLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><FlowchartLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "code_debugger") {
-    return <CodeDebuggerLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><CodeDebuggerLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "graph") {
-    return <GraphLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><GraphLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "matching") {
-    return <MatchingLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><MatchingLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "ordering") {
-    return <OrderingLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><OrderingLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "scenario_builder") {
-    return <ScenarioBuilderLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><ScenarioBuilderLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "highlight_select") {
-    return <HighlightSelectLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><HighlightSelectLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "debate_builder") {
-    return <DebateBuilderLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><DebateBuilderLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "budget_allocator") {
-    return <BudgetAllocatorLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><BudgetAllocatorLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
   if (effectiveLabType === "cohesive") {
-    return <CohesiveLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return <Lab3DCard><CohesiveLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
 
-  // Everything goes through DynamicLab — it handles all block types
+  // Simulation / dynamic labs: Lab3DCard tilt + floating R3F particle background
   const hasBlocks = Array.isArray(labData.blocks) && labData.blocks.length > 0;
-  const hasLegacyContent = labData.parameters?.length > 0 || labData.decisions?.length > 0 || labData.tasks?.length > 0 
+  const hasLegacyContent = labData.parameters?.length > 0 || labData.decisions?.length > 0 || labData.tasks?.length > 0
     || labData.categories?.length > 0 || labData.dimensions?.length > 0 || labData.decision_challenge;
 
   if (hasBlocks || hasLegacyContent) {
     const normalizedData = hasBlocks ? labData : convertLegacyToBlocks(labData);
-    return <DynamicLab data={normalizedData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+    return (
+      <Lab3DCard>
+        <div className="relative rounded-2xl overflow-hidden">
+          {/* floating 3D orbs — code-split, loads asynchronously */}
+          <div className="absolute inset-0 pointer-events-none" aria-hidden>
+            <Suspense fallback={null}>
+              <Lab3DParticles />
+            </Suspense>
+          </div>
+          <div className="relative z-10">
+            <DynamicLab data={normalizedData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />
+          </div>
+        </div>
+      </Lab3DCard>
+    );
   }
 
   return <LabEmptyState labType={effectiveLabType} onRetry={onRetryGeneration} />;

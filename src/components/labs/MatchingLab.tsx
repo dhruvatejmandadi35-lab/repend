@@ -192,8 +192,8 @@ export default function MatchingLab({ data, onComplete, isCompleted, onReplay }:
                 key={pair.id}
                 onClick={() => isMatched && !submitted ? handleUnmatch(pair.id) : handleLeftClick(pair.id)}
                 className={cn(
-                  "relative rounded-xl border px-4 py-3 text-sm cursor-pointer transition-all select-none",
-                  "hover:shadow-sm active:scale-[0.98]",
+                  "relative rounded-xl border px-4 py-3 text-sm cursor-pointer select-none",
+                  "hover:shadow-md active:scale-[0.97]",
                   isSelected && "ring-2 ring-primary bg-primary/10 border-primary/40",
                   isMatched && !isSelected && colorIdx >= 0 && PAIR_COLORS[colorIdx],
                   isMatched && !isSelected && colorIdx >= 0 && RING_COLORS[colorIdx],
@@ -201,6 +201,21 @@ export default function MatchingLab({ data, onComplete, isCompleted, onReplay }:
                   isCorrect && "ring-2 ring-emerald-500 bg-emerald-500/15 border-emerald-500/40",
                   isWrong && "ring-2 ring-red-500 bg-red-500/10 border-red-500/30",
                 )}
+                style={{
+                  transition: "transform 0.30s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, background 0.2s ease",
+                  transform: isMatched && !submitted
+                    ? "perspective(600px) rotateY(4deg) translateZ(8px) scale(1.03)"
+                    : isSelected
+                    ? "perspective(600px) rotateY(-3deg) translateZ(6px) scale(1.02)"
+                    : isCorrect
+                    ? "perspective(600px) translateZ(10px) scale(1.04)"
+                    : "perspective(600px) rotateY(0deg) translateZ(0px) scale(1)",
+                  boxShadow: isMatched && !submitted
+                    ? "0 8px 30px -4px rgba(139,92,246,0.25), 0 0 0 1px rgba(139,92,246,0.15)"
+                    : isCorrect
+                    ? "0 8px 30px -4px rgba(16,185,129,0.3)"
+                    : undefined,
+                }}
               >
                 <span className="font-medium leading-snug">{pair.left}</span>
                 {isMatched && !submitted && (
@@ -237,8 +252,8 @@ export default function MatchingLab({ data, onComplete, isCompleted, onReplay }:
                 key={pair.id}
                 onClick={() => handleRightClick(pair.id)}
                 className={cn(
-                  "rounded-xl border px-4 py-3 text-sm cursor-pointer transition-all select-none",
-                  "hover:shadow-sm active:scale-[0.98]",
+                  "rounded-xl border px-4 py-3 text-sm cursor-pointer select-none",
+                  "hover:shadow-md active:scale-[0.97]",
                   isMatched && colorIdx >= 0 && PAIR_COLORS[colorIdx],
                   isMatched && colorIdx >= 0 && RING_COLORS[colorIdx],
                   !isMatched && selectedLeft && "ring-2 ring-dashed ring-primary/40 bg-primary/5 border-primary/20",
@@ -246,6 +261,21 @@ export default function MatchingLab({ data, onComplete, isCompleted, onReplay }:
                   isCorrect && "ring-2 ring-emerald-500 bg-emerald-500/15 border-emerald-500/40",
                   isWrong && "ring-2 ring-red-500 bg-red-500/10 border-red-500/30",
                 )}
+                style={{
+                  transition: "transform 0.30s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, background 0.2s ease",
+                  transform: isMatched
+                    ? "perspective(600px) rotateY(-4deg) translateZ(8px) scale(1.03)"
+                    : !isMatched && selectedLeft
+                    ? "perspective(600px) translateZ(4px) scale(1.01)"
+                    : isCorrect
+                    ? "perspective(600px) translateZ(10px) scale(1.04)"
+                    : "perspective(600px) rotateY(0deg) translateZ(0px) scale(1)",
+                  boxShadow: isMatched
+                    ? "0 8px 30px -4px rgba(139,92,246,0.25), 0 0 0 1px rgba(139,92,246,0.15)"
+                    : isCorrect
+                    ? "0 8px 30px -4px rgba(16,185,129,0.3)"
+                    : undefined,
+                }}
               >
                 <span className="leading-snug">{pair.right}</span>
               </div>
