@@ -728,6 +728,69 @@ const cohesiveTool = {
   },
 };
 
+const scene3DTool = {
+  name: "create_scene_3d_lab",
+  description:
+    "Create an interactive 3D SCENE lab where students rotate and explore labeled 3D objects, click them to learn, then answer a quiz by clicking the correct 3D object. Best for: cell biology/organelles, solar system, atomic structure, molecular bonds, brain anatomy, heart/body parts, ecosystems, architecture, historical sites, geographic features — any topic where SPATIAL or 3D STRUCTURE is key to understanding.",
+  input_schema: {
+    type: "object",
+    properties: {
+      lab_type: { type: "string", const: "scene_3d" },
+      title: { type: "string" },
+      description: { type: "string", description: "1-2 sentences describing what the student will explore" },
+      instructions: { type: "string", description: "What to do in explore mode, e.g. 'Click each organelle to learn its function'" },
+      objects: {
+        type: "array",
+        minItems: 4,
+        maxItems: 10,
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Unique snake_case identifier" },
+            shape: { type: "string", enum: ["sphere", "box", "cylinder", "torus", "cone", "ring"] },
+            position: { type: "array", items: { type: "number" }, description: "3D [x,y,z] position. Spread between -4 and 4. No overlaps." },
+            color: { type: "string", description: "Distinct hex color per object, e.g. #8b5cf6" },
+            scale: { type: "number", description: "Size multiplier 0.5–2.5. Use larger scale for more important structures." },
+            label: { type: "string", description: "Short name shown as floating label (1–3 words)" },
+            info: { type: "string", description: "What this object is and why it matters (2–3 sentences shown on click)" },
+          },
+          required: ["id", "shape", "position", "color", "label", "info"],
+        },
+      },
+      connections: {
+        type: "array",
+        description: "Lines connecting related objects to show structure/relationships (optional)",
+        items: {
+          type: "object",
+          properties: {
+            from: { type: "string" },
+            to: { type: "string" },
+            color: { type: "string" },
+          },
+          required: ["from", "to"],
+        },
+      },
+      quiz: {
+        type: "array",
+        minItems: 3,
+        maxItems: 6,
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            question: { type: "string", description: "Ask student to click a specific object, e.g. 'Click the organelle that produces ATP'" },
+            correct_object_id: { type: "string", description: "Must exactly match an object id" },
+            explanation: { type: "string", description: "Why this is correct (1–2 sentences)" },
+          },
+          required: ["id", "question", "correct_object_id", "explanation"],
+        },
+      },
+      key_insight: { type: "string" },
+    },
+    required: ["lab_type", "title", "description", "objects", "quiz", "key_insight"],
+  },
+};
+
 // ─── DOMAIN-SPECIFIC SIMULATION TEMPLATES ───
 
 const DOMAIN_TEMPLATES: Record<string, string> = {
