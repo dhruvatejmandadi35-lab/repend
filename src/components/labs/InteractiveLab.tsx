@@ -17,6 +17,12 @@ import Lab3DCard from "./Lab3DCard";
 
 const Lab3DParticles = lazy(() => import("./Lab3DParticles"));
 
+class ParticleErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
 type Props = {
   labType?: string | null;
   labData?: any;
