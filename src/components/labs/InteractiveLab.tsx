@@ -26,15 +26,20 @@ type Props = {
   onReplay?: () => void;
 };
 
-function LabEmptyState({ labType, onRetry }: { labType?: string | null; onRetry?: () => void }) {
+function LabEmptyState({ labType, detail, onRetry }: { labType?: string | null; detail?: string; onRetry?: () => void }) {
   return (
     <Card className="border-dashed border-2 border-muted-foreground/20">
       <CardContent className="p-8 text-center space-y-3">
         <div className="text-4xl">🔬</div>
-        <h3 className="font-bold text-lg">Lab Failed to Generate</h3>
+        <h3 className="font-bold text-lg">Lab Data Unavailable</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          The interactive lab couldn't be built for this challenge. This usually means the AI returned incomplete data.
+          {detail || "The interactive lab couldn't be built for this module. The AI returned incomplete data."}
         </p>
+        {import.meta.env.DEV && detail && (
+          <pre className="text-xs text-left bg-muted p-2 rounded max-w-md mx-auto overflow-auto">
+            {detail}
+          </pre>
+        )}
         {onRetry && (
           <Button variant="outline" onClick={onRetry}>
             <RefreshCw className="w-4 h-4 mr-1" /> Regenerate Lab
@@ -89,7 +94,8 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
 
   // No data at all
   if (!labData || (typeof labData === "object" && Object.keys(labData).length === 0)) {
-    return <LabEmptyState labType={labType} onRetry={onRetryGeneration} />;
+    console.warn("[InteractiveLab] labData is null/empty", { labType, labGenerationStatus, labError });
+    return <LabEmptyState labType={labType} detail="lab_data is null or empty — the edge function may have failed silently." onRetry={onRetryGeneration} />;
   }
 
   // Check for empty marker from old system
@@ -99,6 +105,49 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
 
   // lab_type may live inside lab_data (course labs) or only in the DB column (challenge labs)
   const effectiveLabType = labData.lab_type || labType;
+
+  console.log("[InteractiveLab] rendering", { effectiveLabType, labGenerationStatus, labError, lab_data_keys: labData ? Object.keys(labData) : null });
+
+  // Per-type required-field validation
+  const missingFields = (() => {
+    switch (effectiveLabType) {
+      case "simulation": case "dynamic": {
+        const missing = [];
+        if (!Array.isArray(labData.variables) || labData.variables.length === 0) missing.push("variables[]");
+        if (!Array.isArray(labData.blocks) || labData.blocks.length === 0) missing.push("blocks[]");
+        if (!labData.formulas || Object.keys(labData.formulas).length === 0) missing.push("formulas{}");
+        return missing;
+      }
+      case "flowchart":
+        return (!Array.isArray(labData.drop_zones) || labData.drop_zones.length === 0) ? ["drop_zones[]"] : [];
+      case "graph":
+        return (!Array.isArray(labData.sliders) || labData.sliders.length === 0) ? ["sliders[]"] : [];
+      case "code_debugger":
+        return (!labData.starter_code) ? ["starter_code"] : [];
+      case "matching":
+        return (!Array.isArray(labData.pairs) || labData.pairs.length < 2) ? ["pairs[]"] : [];
+      case "ordering":
+        return (!Array.isArray(labData.items) || labData.items.length < 2) ? ["items[]"] : [];
+      case "scenario_builder":
+        return (!labData.narrative || !Array.isArray(labData.blanks)) ? ["narrative", "blanks[]"] : [];
+      case "highlight_select":
+        return (!Array.isArray(labData.items) || labData.items.length === 0) ? ["items[]"] : [];
+      case "debate_builder":
+        return (!Array.isArray(labData.statements) || labData.statements.length === 0) ? ["statements[]"] : [];
+      case "budget_allocator":
+        return (!Array.isArray(labData.categories) || labData.categories.length === 0) ? ["categories[]"] : [];
+      case "cohesive":
+        return (!Array.isArray(labData.activities) || labData.activities.length === 0) ? ["activities[]"] : [];
+      default:
+        return [];
+    }
+  })();
+
+  if (missingFields.length > 0) {
+    const detail = `lab_type "${effectiveLabType}" is missing required fields: ${missingFields.join(", ")}`;
+    console.error("[InteractiveLab] validation failed —", detail, labData);
+    return <LabEmptyState labType={effectiveLabType} detail={detail} onRetry={onRetryGeneration} />;
+  }
 
   // Route to specialized lab renderers based on lab_type
   if (effectiveLabType === "flowchart") {

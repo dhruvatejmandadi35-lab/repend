@@ -1,4 +1,4 @@
-// v2 — picks up ANTHROPIC_API_KEY secret, improved error logging
+// v3 — startup key-presence log, structured error surface
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -373,6 +373,10 @@ Choose the lab format that will most effectively teach this topic through hands-
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const _keyPresent = !!Deno.env.get("ANTHROPIC_API_KEY");
+  const _keyPrefix = _keyPresent ? Deno.env.get("ANTHROPIC_API_KEY")!.slice(0, 8) + "…" : "MISSING";
+  console.log(`[generate-challenge] invoked — ANTHROPIC_API_KEY present: ${_keyPresent} (${_keyPrefix})`);
 
   try {
     const authHeader = req.headers.get("Authorization");
