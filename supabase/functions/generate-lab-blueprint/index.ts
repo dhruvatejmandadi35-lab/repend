@@ -1142,6 +1142,8 @@ Choose the activity type that will best help a high school student truly underst
     let labType = "simulation"; // will be set from Claude's tool choice
     let lastGenError = "";
 
+    console.log(`[generate-lab-blueprint] → calling Claude (claude-sonnet-4-6) for "${moduleTitle}" | topic: ${topic}`);
+
     for (let attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) {
         console.log(`[Retry ${attempt}] "${moduleTitle}"`);
