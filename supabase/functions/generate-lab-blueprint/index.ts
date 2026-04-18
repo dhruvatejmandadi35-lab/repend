@@ -1103,15 +1103,17 @@ SELECTION GUIDELINES:
 - Choose the format that makes the lesson concept come alive as an activity
 - A lesson about "causes of WWI" → cohesive (narrative spine with ordering + debate + classify)
 - A lesson about "DNA replication steps" → flowchart or ordering
-- A lesson about "supply and demand" → simulation or budget_allocator
+- A lesson about "supply and demand" → budget_allocator or simulation
 - A lesson about "logical fallacies" → highlight_select or matching
-- A lesson about "climate policy" → cohesive (budget + debate + branch_chain) or budget_allocator
+- A lesson about "climate policy" → cohesive (budget + debate) or budget_allocator
 - A lesson about "quadratic equations" → graph
 - A lesson about "Python loops" → code_debugger
 - A lesson about vocabulary/terms → matching
+- A lesson about historical events/timelines → ordering
 - A lesson about ethics, justice, complex history, social topics → cohesive
 - A lesson that covers multiple sub-concepts → cohesive
-- When uncertain, simulation is the universal fallback
+- If uncertain between two options, pick the NON-simulation one — simulation should only be chosen when there are real numeric variables that students can adjust to see live output changes
+- Only use simulation if the concept genuinely involves adjustable variables and live calculated outputs
 
 QUALITY RULES:
 - All content must come directly from the lesson provided
