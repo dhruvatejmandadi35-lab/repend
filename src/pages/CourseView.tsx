@@ -307,6 +307,17 @@ export default function CourseView() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            {course?.user_id === user?.id && (
+              <button
+                onClick={regenerateAllLabs}
+                disabled={regeneratingAll}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                title="Regenerate all labs with new activity types"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", regeneratingAll && "animate-spin")} />
+                {regeneratingAll ? "Regenerating…" : "Regen Labs"}
+              </button>
+            )}
             {isElite && course?.user_id === user?.id && (
               <button
                 onClick={() => navigate(`/courses/${id}/edit`)}
