@@ -187,6 +187,19 @@ export default function CourseView() {
     }
   };
 
+  const regenerateAllLabs = async () => {
+    setRegeneratingAll(true);
+    toast({ title: "Regenerating all labs…", description: "This may take a minute." });
+    try {
+      for (const m of modules) {
+        await triggerLabGeneration(m.id, true);
+      }
+      toast({ title: "Labs regenerated!", description: "All labs have been rebuilt with new activity types." });
+    } finally {
+      setRegeneratingAll(false);
+    }
+  };
+
   const mod = modules[activeModule];
 
   const totalSections = modules.length * 3;
