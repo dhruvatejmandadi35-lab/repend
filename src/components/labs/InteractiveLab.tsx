@@ -13,6 +13,7 @@ import HighlightSelectLab from "./HighlightSelectLab";
 import DebateBuilderLab from "./DebateBuilderLab";
 import BudgetAllocatorLab from "./BudgetAllocatorLab";
 import CohesiveLab from "./CohesiveLab";
+import Scene3DLab from "./Scene3DLab";
 import Lab3DCard from "./Lab3DCard";
 
 const Lab3DParticles = lazy(() => import("./Lab3DParticles"));
