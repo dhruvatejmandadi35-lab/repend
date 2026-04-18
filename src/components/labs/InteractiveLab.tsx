@@ -149,6 +149,8 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
         return (!Array.isArray(labData.categories) || labData.categories.length === 0) ? ["categories[]"] : [];
       case "cohesive":
         return (!Array.isArray(labData.activities) || labData.activities.length === 0) ? ["activities[]"] : [];
+      case "scene_3d":
+        return (!Array.isArray(labData.objects) || labData.objects.length < 3) ? ["objects[]"] : [];
       default:
         return [];
     }
