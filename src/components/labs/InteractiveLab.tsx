@@ -193,6 +193,9 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
   if (effectiveLabType === "cohesive") {
     return <Lab3DCard><CohesiveLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} /></Lab3DCard>;
   }
+  if (effectiveLabType === "scene_3d") {
+    return <Scene3DLab data={labData} onComplete={onComplete} isCompleted={isCompleted} onReplay={onReplay} />;
+  }
 
   // Simulation / dynamic labs: Lab3DCard tilt + floating R3F particle background
   const hasBlocks = Array.isArray(labData.blocks) && labData.blocks.length > 0;
