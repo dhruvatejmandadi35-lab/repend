@@ -33,7 +33,7 @@ export default function Lab3DCard({ children, className, intensity = 10 }: Props
         if (glow) {
           const px = (((e.clientX - rect.left) / rect.width) * 100).toFixed(1);
           const py = (((e.clientY - rect.top) / rect.height) * 100).toFixed(1);
-          glow.style.background = `radial-gradient(360px circle at ${px}% ${py}%, rgba(139,92,246,0.11) 0%, rgba(99,102,241,0.07) 35%, transparent 70%)`;
+          glow.style.background = `radial-gradient(400px circle at ${px}% ${py}%, rgba(139,92,246,0.22) 0%, rgba(99,102,241,0.14) 35%, transparent 70%)`;
         }
       });
     },
