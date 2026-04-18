@@ -153,6 +153,7 @@ export default function CourseView() {
   const triggerLabGeneration = async (moduleId: string, force = false) => {
     if (generatingLabs.has(moduleId)) return;
     setGeneratingLabs(prev => new Set(prev).add(moduleId));
+    const prevModule = modules.find(m => m.id === moduleId);
     if (force) {
       await supabase.from("course_modules").update({ lab_generation_status: "pending" }).eq("id", moduleId);
       setModules(prev => prev.map(m => m.id === moduleId ? { ...m, lab_generation_status: "pending" } : m));
@@ -175,9 +176,19 @@ export default function CourseView() {
         if (data) {
           setModules(prev => prev.map(m => m.id === moduleId ? { ...data, quiz: Array.isArray(data.quiz) ? data.quiz : [] } : m));
         }
+      } else {
+        // Edge function failed — reset to previous state so lab doesn't get stuck as "pending"
+        const resetStatus = prevModule?.lab_generation_status === "done" ? "done" : "failed";
+        await supabase.from("course_modules").update({ lab_generation_status: resetStatus }).eq("id", moduleId);
+        setModules(prev => prev.map(m => m.id === moduleId ? { ...m, lab_generation_status: resetStatus } : m));
+        console.error("Lab generation failed for module", moduleId, await resp.text().catch(() => resp.status));
       }
     } catch (e) {
-      console.error("Lab generation failed for module", moduleId, e);
+      // Network error — reset so lab doesn't get stuck as "pending"
+      const resetStatus = prevModule?.lab_generation_status === "done" ? "done" : "failed";
+      await supabase.from("course_modules").update({ lab_generation_status: resetStatus }).eq("id", moduleId);
+      setModules(prev => prev.map(m => m.id === moduleId ? { ...m, lab_generation_status: resetStatus } : m));
+      console.error("Lab generation network error for module", moduleId, e);
     } finally {
       setGeneratingLabs(prev => {
         const next = new Set(prev);
