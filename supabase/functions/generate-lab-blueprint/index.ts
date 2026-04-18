@@ -1,4 +1,4 @@
-// v3 — startup key-presence log, per-type validation diagnostics
+// v4 — fix model to claude-sonnet-4-6, log already_done skips
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -33,7 +33,7 @@ async function callClaude(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-opus-4-6",
+          model: "claude-sonnet-4-6",
           max_tokens: 4096,
           system,
           tools,
@@ -95,7 +95,7 @@ async function callClaudeAuto(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-opus-4-6",
+          model: "claude-sonnet-4-6",
           max_tokens: 4096,
           system,
           tools,
@@ -1055,6 +1055,7 @@ serve(async (req) => {
         .eq("id", moduleId)
         .single();
       if (fullMod?.lab_data && Object.keys(fullMod.lab_data).length > 0) {
+        console.log(`[generate-lab-blueprint] SKIPPED "${mod.title}" — already_done and force=false. Run SQL reset or use force=true to regenerate.`);
         return new Response(JSON.stringify({ status: "already_done" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

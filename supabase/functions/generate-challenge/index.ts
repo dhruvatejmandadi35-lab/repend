@@ -1,4 +1,4 @@
-// v3 — startup key-presence log, structured error surface
+// v4 — fix model to claude-sonnet-4-6
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -332,7 +332,7 @@ Choose the lab format that will most effectively teach this topic through hands-
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-opus-4-6",
+          model: "claude-sonnet-4-6",
           max_tokens: 8096,
           system: SYSTEM,
           tools: [challengeTool],
