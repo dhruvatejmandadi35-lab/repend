@@ -1252,6 +1252,7 @@ Choose the activity type that will best help a high school student truly underst
         if (labType === "debate_builder" && blueprint.statements?.length >= 4) break;
         if (labType === "budget_allocator" && blueprint.categories?.length >= 3) break;
         if (labType === "cohesive" && blueprint.activities?.length >= 4 && blueprint.metrics?.length >= 2) break;
+        if (labType === "scene_3d" && blueprint.objects?.length >= 4 && blueprint.quiz?.length >= 3) break;
         if (labType === "simulation" && blueprint.variables?.length > 0 && blueprint.blocks?.length > 0) break;
         if (blueprint && typeof blueprint === "object") break;
       } catch (e: any) {
