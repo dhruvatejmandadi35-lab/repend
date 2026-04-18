@@ -1176,6 +1176,11 @@ SELECTION GUIDELINES:
 - A lesson about historical events/timelines → ordering
 - A lesson about ethics, justice, complex history, social topics → cohesive
 - A lesson that covers multiple sub-concepts → cohesive
+- A lesson about "cell organelles" → scene_3d
+- A lesson about "solar system / planets" → scene_3d
+- A lesson about "atomic structure" → scene_3d
+- A lesson about "human anatomy" → scene_3d
+- A lesson about "molecular bonds / DNA structure" → scene_3d
 - If uncertain between two options, pick the NON-simulation one — simulation should only be chosen when there are real numeric variables that students can adjust to see live output changes
 - Only use simulation if the concept genuinely involves adjustable variables and live calculated outputs
 
