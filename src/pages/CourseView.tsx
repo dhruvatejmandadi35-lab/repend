@@ -81,6 +81,7 @@ export default function CourseView() {
   const [activeContent, setActiveContent] = useState<ContentType>("lesson");
   const [loading, setLoading] = useState(true);
   const [generatingLabs, setGeneratingLabs] = useState<Set<string>>(new Set());
+  const [regeneratingAll, setRegeneratingAll] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
 
