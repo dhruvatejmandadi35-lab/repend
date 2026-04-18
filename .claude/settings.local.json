@@ -3,7 +3,25 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty'); if [ -n \"$file\" ]; then cd /workspaces/repend-1cdd18ac && git add \"$file\" && git diff --cached --quiet || git commit -m \"auto: save changes to ${file##*/}\" && git push 2>/dev/null || true; fi",
+            "timeout": 30,
+            "statusMessage": "Committing and pushing changes..."
+          }
+        ]
+      }
     ]
   }
 }
