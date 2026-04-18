@@ -1236,6 +1236,7 @@ Choose the activity type that will best help a high school student truly underst
           create_debate_builder_lab: "debate_builder",
           create_budget_allocator_lab: "budget_allocator",
           create_cohesive_lab: "cohesive",
+          create_scene_3d_lab: "scene_3d",
         };
         labType = toolToType[result.toolName] || "simulation";
         console.log(`[Lab Gen] "${moduleTitle}" → Claude chose: ${result.toolName} (${labType})`);
