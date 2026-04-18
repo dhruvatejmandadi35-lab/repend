@@ -7,7 +7,7 @@ interface Props {
   intensity?: number;
 }
 
-export default function Lab3DCard({ children, className, intensity = 6 }: Props) {
+export default function Lab3DCard({ children, className, intensity = 10 }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
