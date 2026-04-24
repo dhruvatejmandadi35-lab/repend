@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Plus, Sparkles, Loader2, Trash2, ArrowRight, Paperclip, X, FileText, Crown, PenTool, Globe, RotateCcw, Clock } from "lucide-react";
+import { BookOpen, Plus, Sparkles, Loader2, Trash2, ArrowRight, Paperclip, X, FileText, Crown, PenTool, Globe, RotateCcw, Clock, AlertCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,9 @@ export default function Courses() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingCourseId, setGeneratingCourseId] = useState<string | null>(null);
   const [generatingTopic, setGeneratingTopic] = useState("");
+  const [generatingCourseTitle, setGeneratingCourseTitle] = useState("");
+  const [generatingModules, setGeneratingModules] = useState<{ index: number; title: string }[]>([]);
+  const [existingPublicCourse, setExistingPublicCourse] = useState<{ id: string; title: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -129,7 +132,7 @@ export default function Courses() {
 
   const { plan, getCoursesLimit, getFileUploadsLimit } = useSubscription();
 
-  const handleCreateClick = () => {
+  const handleCreateClick = async () => {
     const hasInput = topic.trim() || selectedFiles.length > 0;
     if (!hasInput || isGenerating) return;
 
@@ -150,6 +153,23 @@ export default function Courses() {
       toast({ title: "File uploads not available", description: "Upgrade to Pro or Elite to generate courses from uploaded files.", variant: "destructive" });
       navigate("/pricing");
       return;
+    }
+
+    // Check for existing public course with same topic (caching)
+    if (topic.trim() && selectedFiles.length === 0) {
+      const { data: existing } = await supabase
+        .from("courses")
+        .select("id, title")
+        .eq("is_public", true)
+        .eq("status", "ready")
+        .ilike("topic", topic.trim())
+        .limit(1)
+        .maybeSingle();
+
+      if (existing) {
+        setExistingPublicCourse(existing);
+        return;
+      }
     }
 
     setShowPersonalization(true);
@@ -196,9 +216,11 @@ export default function Courses() {
         throw new Error(err.error || "Failed to generate course");
       }
 
-      const { courseId, modules } = await resp.json();
+      const { courseId, courseTitle: generatedTitle, modules } = await resp.json();
       setTopic("");
       setSelectedFiles([]);
+      setGeneratingCourseTitle(generatedTitle || currentTopic);
+      setGeneratingModules(modules || []);
       setGeneratingCourseId(courseId); // Start progress tracking
 
       // Phase 2: Fire off module content generation in background (parallel, 2 at a time)
@@ -243,7 +265,9 @@ export default function Courses() {
   const handleGenerationComplete = (courseId: string) => {
     setIsGenerating(false);
     setGeneratingCourseId(null);
-    toast({ title: "Course ready! 🎉", description: "All lessons, labs, and quizzes are generated." });
+    setGeneratingCourseTitle("");
+    setGeneratingModules([]);
+    toast({ title: "Course ready!", description: "All lessons, labs, and quizzes are generated." });
     fetchCourses();
     navigate(`/courses/${courseId}`);
   };
@@ -498,9 +522,55 @@ export default function Courses() {
         topic={topic || firstFileName || ""}
       />
 
+      {/* Existing public course offer */}
+      {existingPublicCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-lg">Course Already Exists</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Someone already created <span className="font-medium text-foreground">"{existingPublicCourse.title}"</span>. Load it instantly — no waiting!
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 pt-1">
+              <Button
+                variant="hero"
+                className="w-full"
+                onClick={() => {
+                  navigate(`/courses/${existingPublicCourse.id}`);
+                  setExistingPublicCourse(null);
+                }}
+              >
+                <BookOpen className="w-4 h-4 mr-2" /> Load Existing Course
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => { setExistingPublicCourse(null); setShowPersonalization(true); }}
+              >
+                Generate New Course Anyway
+              </Button>
+              <button
+                onClick={() => setExistingPublicCourse(null)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Course generation loading screen */}
       <CourseGeneratingScreen
         topic={generatingTopic || topic || firstFileName || ""}
+        courseTitle={generatingCourseTitle}
+        expectedModules={generatingModules}
         isVisible={isGenerating && !!user}
         courseId={generatingCourseId}
         onComplete={handleGenerationComplete}

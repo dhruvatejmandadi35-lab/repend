@@ -10,6 +10,10 @@ import {
   ClipboardList,
   Pencil,
   RefreshCw,
+  Globe,
+  ChevronRight,
+  ListChecks,
+  FlaskConical,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -41,6 +45,8 @@ type Module = {
   lab_error: string | null;
   quiz: any[];
   completed: boolean;
+  real_world_application?: string | null;
+  key_takeaways?: string[] | null;
 };
 
 type Course = {
@@ -461,14 +467,77 @@ export default function CourseView() {
                   <>
                     <div className={cn(themeClasses.card, "p-8")}>
                       {activeContent === "lesson" && (
-                        <LessonSlides
-                          content={mod.lesson_content}
-                          youtubeUrl={mod.youtube_url}
-                          youtubeTitle={mod.youtube_title}
-                          onComplete={handleLessonComplete}
-                          isCompleted={getSectionDone(mod.id, "lesson")}
-                          onSlideChange={(idx) => setCurrentSlideIndex(idx)}
-                        />
+                        <>
+                          <LessonSlides
+                            content={mod.lesson_content}
+                            youtubeUrl={mod.youtube_url}
+                            youtubeTitle={mod.youtube_title}
+                            onComplete={handleLessonComplete}
+                            isCompleted={getSectionDone(mod.id, "lesson")}
+                            onSlideChange={(idx) => setCurrentSlideIndex(idx)}
+                          />
+
+                          {/* ── Real World Application ── */}
+                          {mod.real_world_application && (
+                            <div className="mt-8 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 p-6">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-full bg-green-500/15 flex items-center justify-center">
+                                  <Globe className="w-3.5 h-3.5 text-green-500" />
+                                </div>
+                                <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-green-600 dark:text-green-400">
+                                  Real World Application
+                                </span>
+                              </div>
+                              <p className="text-sm text-foreground leading-relaxed">
+                                {mod.real_world_application}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* ── Key Takeaways ── */}
+                          {mod.key_takeaways && mod.key_takeaways.length > 0 && (
+                            <div className="mt-6 rounded-2xl bg-secondary/30 border border-border/50 p-6">
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <ListChecks className="w-3.5 h-3.5 text-primary" />
+                                </div>
+                                <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-muted-foreground">
+                                  Key Takeaways
+                                </span>
+                              </div>
+                              <ul className="space-y-2">
+                                {mod.key_takeaways.map((takeaway, i) => (
+                                  <li key={i} className="flex items-start gap-2.5 text-sm text-foreground">
+                                    <CheckCircle2 className="w-4 h-4 text-primary/60 mt-0.5 shrink-0" />
+                                    <span>{takeaway}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* ── Start Lab / Take Quiz CTA ── */}
+                          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                            <button
+                              onClick={() => selectItem(activeModule, "lab")}
+                              className="flex-1 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground font-semibold text-[14px] hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+                            >
+                              <FlaskConical className="w-4 h-4" />
+                              Start Lab
+                              {mod.lab_generation_status === "generating" && (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin ml-1" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => selectItem(activeModule, "quiz")}
+                              className="flex-1 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-secondary border border-border/60 text-foreground font-semibold text-[14px] hover:bg-secondary/80 transition-colors"
+                            >
+                              <ClipboardList className="w-4 h-4" />
+                              Take Quiz
+                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                          </div>
+                        </>
                       )}
 
                       {activeContent === "lab" && (
