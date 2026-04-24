@@ -34,7 +34,7 @@ async function callClaude(
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 4096,
+          max_tokens: 8192,
           system,
           tools,
           tool_choice: { type: "tool", name: toolName },
@@ -96,7 +96,7 @@ async function callClaudeAuto(
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 4096,
+          max_tokens: 8192,
           system,
           tools,
           tool_choice: { type: "any" }, // Claude picks the most appropriate activity
@@ -791,6 +791,45 @@ const scene3DTool = {
   },
 };
 
+const artifactTool = {
+  name: "create_artifact_lab",
+  description:
+    "Create an ARTIFACT lab — a fully interactive, self-contained HTML/CSS/JS activity that runs inside a sandboxed iframe. Use this for rich spatial or visual topics: 3D visualizations using raw WebGL/Canvas, animated simulations, interactive diagrams, particle systems, geometric explorations, network graphs, or anything that benefits from a custom visual built from scratch. All scripts must be inline (no external CDN imports). The visualization must directly illustrate a concept from the lesson.",
+  input_schema: {
+    type: "object",
+    properties: {
+      lab_type: { type: "string", const: "artifact" },
+      title: { type: "string" },
+      description: { type: "string", description: "1-2 sentences describing what the student will explore" },
+      instructions: { type: "string", description: "What the student should do and interact with (1-2 sentences)" },
+      html_content: {
+        type: "string",
+        description: `A complete self-contained HTML page. Rules:
+- All CSS and JS must be inline (no <script src> or <link rel=stylesheet> — no CDN)
+- Must use Canvas API, SVG, or raw WebGL for visuals — do NOT use Three.js CDN
+- Must be interactive: clicks, mouse movement, buttons, or keyboard input
+- Background should be dark (#0f172a or similar) to match the app theme
+- Font: use system-ui or inherit, white/light text
+- Must directly visualize or demonstrate the lesson concept
+- Keep under ~200 lines so it generates reliably
+- Include clear on-screen labels and a brief legend or guide for the user`,
+      },
+      reflection_question: { type: "string", description: "A question testing what the student observed in the artifact" },
+      reflection_options: {
+        type: "array",
+        minItems: 3,
+        maxItems: 4,
+        items: { type: "string" },
+        description: "Answer options — all should be plausible",
+      },
+      reflection_correct: { type: "string", description: "The correct option (must exactly match one of reflection_options)" },
+      reflection_explanation: { type: "string", description: "1-2 sentences explaining why the correct answer is right" },
+      key_insight: { type: "string" },
+    },
+    required: ["lab_type", "title", "description", "instructions", "html_content", "key_insight"],
+  },
+};
+
 // ─── DOMAIN-SPECIFIC SIMULATION TEMPLATES ───
 
 const DOMAIN_TEMPLATES: Record<string, string> = {
@@ -1136,19 +1175,19 @@ serve(async (req) => {
     const lessonContent = mod.lesson_content || "";
     const lessonSummary = lessonContent.replace(/\n---\n/g, "\n").replace(/#{1,3}\s/g, "").slice(0, 3000);
 
-    // ── All 11 activity tools — Claude picks the most pedagogically appropriate one ──
+    // ── All 12 activity tools — Claude picks the most pedagogically appropriate one ──
     const ALL_TOOLS = [
       simulationTool, graphTool, flowchartTool, codeDebuggerTool,
       matchingTool, orderingTool, scenarioBuilderTool,
       highlightSelectTool, debateBuilderTool, budgetAllocatorTool,
-      cohesiveTool, scene3DTool,
+      cohesiveTool, scene3DTool, artifactTool,
     ];
 
     const domainTemplates = selectDomainTemplate(topic, moduleTitle, lessonContent);
 
     const system = `You are an expert educational lab designer for high school and lifelong learners. Your job is to create ONE interactive activity that best teaches a specific lesson concept.
 
-You have 10 activity formats to choose from. Pick the ONE that will be most engaging and pedagogically effective for THIS specific topic:
+You have 12 activity formats to choose from. Pick the ONE that will be most engaging and pedagogically effective for THIS specific topic:
 
 1. create_simulation_lab — Adjust sliders, see live outputs change. Best for: physics, chemistry, economics, systems thinking, anything with variables that interact.
 2. create_graph_lab — Manipulate equation parameters via sliders, see graph update. ONLY for pure math/science with actual plotable equations.
@@ -1162,6 +1201,7 @@ You have 10 activity formats to choose from. Pick the ONE that will be most enga
 10. create_budget_allocator_lab — Distribute 100% across categories with sliders. Best for: resource allocation, government/personal finance, tradeoff decisions, policy design.
 11. create_cohesive_lab — Multi-activity narrative lab with 4-5 sequential activities, persistent metrics, unlock progression, and a final grade. Best for: rich complex topics where one activity isn't enough — history, ethics, complex science, business strategy, social issues, any topic that benefits from a story arc.
 12. create_scene_3d_lab — Interactive 3D scene: students rotate/explore labeled 3D objects, click to learn, then answer a quiz by clicking objects. Best for: cell organelles, solar system, atomic structure, molecular bonds, brain regions, body anatomy, ecosystems, architecture — any topic understood through spatial/3D structure.
+13. create_artifact_lab — A fully custom interactive HTML/Canvas/WebGL activity generated from scratch. All JS is inline (no CDN). Use this for: stunning 3D visualizations via raw WebGL/Canvas, particle systems, animated physics, interactive network graphs, geometric proofs, orbit simulations, wave interference patterns — anything that needs a bespoke interactive visual. The artifact runs in a sandbox and must use only browser-native APIs.
 
 SELECTION GUIDELINES:
 - Choose the format that makes the lesson concept come alive as an activity
@@ -1176,13 +1216,24 @@ SELECTION GUIDELINES:
 - A lesson about historical events/timelines → ordering
 - A lesson about ethics, justice, complex history, social topics → cohesive
 - A lesson that covers multiple sub-concepts → cohesive
-- A lesson about "cell organelles" → scene_3d
-- A lesson about "solar system / planets" → scene_3d
-- A lesson about "atomic structure" → scene_3d
-- A lesson about "human anatomy" → scene_3d
-- A lesson about "molecular bonds / DNA structure" → scene_3d
+- A lesson about "cell organelles" → artifact (interactive WebGL cell with clickable organelles)
+- A lesson about "solar system / planets" → artifact (orbiting planets simulation with Canvas)
+- A lesson about "atomic structure" → artifact (interactive Bohr model with Canvas)
+- A lesson about "human anatomy" → artifact (labeled SVG diagram with click-to-learn)
+- A lesson about "wave interference / light / sound" → artifact (animated wave Canvas)
+- A lesson about "neural networks" → artifact (animated node-and-edge graph Canvas)
+- A lesson about "gravity / orbital mechanics" → artifact (gravity simulation Canvas)
+- A lesson about "fractals / chaos / math visuals" → artifact
 - If uncertain between two options, pick the NON-simulation one — simulation should only be chosen when there are real numeric variables that students can adjust to see live output changes
 - Only use simulation if the concept genuinely involves adjustable variables and live calculated outputs
+
+ARTIFACT RULES (if you pick create_artifact_lab):
+- html_content must be a complete, valid HTML page with all CSS and JS inline
+- NO <script src="..."> or external imports — browser-native APIs only
+- Canvas 2D, SVG, raw WebGL, and CSS animations are all fair game
+- Dark background matching #0f172a, white/violet text
+- Must be genuinely interactive (mouse, click, or keyboard) and visually teach the concept
+- Target ~120-180 lines — concise but impressive
 
 QUALITY RULES:
 - All content must come directly from the lesson provided
@@ -1237,6 +1288,7 @@ Choose the activity type that will best help a high school student truly underst
           create_budget_allocator_lab: "budget_allocator",
           create_cohesive_lab: "cohesive",
           create_scene_3d_lab: "scene_3d",
+          create_artifact_lab: "artifact",
         };
         labType = toolToType[result.toolName] || "simulation";
         console.log(`[Lab Gen] "${moduleTitle}" → Claude chose: ${result.toolName} (${labType})`);
@@ -1253,6 +1305,7 @@ Choose the activity type that will best help a high school student truly underst
         if (labType === "budget_allocator" && blueprint.categories?.length >= 3) break;
         if (labType === "cohesive" && blueprint.activities?.length >= 4 && blueprint.metrics?.length >= 2) break;
         if (labType === "scene_3d" && blueprint.objects?.length >= 4 && blueprint.quiz?.length >= 3) break;
+        if (labType === "artifact" && blueprint.html_content) break;
         if (labType === "simulation" && blueprint.variables?.length > 0 && blueprint.blocks?.length > 0) break;
         if (blueprint && typeof blueprint === "object") break;
       } catch (e: any) {
