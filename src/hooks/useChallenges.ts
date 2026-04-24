@@ -138,22 +138,22 @@ export function useChallenges() {
     ));
 
     // Award server-side points to solver
-    await (supabase as any).from("user_points").insert({
+    await supabase.from("user_points" as any).insert({
       user_id: user.id,
       amount: 50,
       reason: "challenge_solved",
       challenge_id: challengeId,
-    });
+    } as any);
 
     // Award server-side points to creator
     const challenge = challenges.find(c => c.id === challengeId);
     if (challenge?.user_id && challenge.user_id !== user.id) {
-      await (supabase as any).from("user_points").insert({
+      await supabase.from("user_points" as any).insert({
         user_id: challenge.user_id,
         amount: 25,
         reason: "challenge_creator_reward",
         challenge_id: challengeId,
-      });
+      } as any);
     }
 
     return true;
