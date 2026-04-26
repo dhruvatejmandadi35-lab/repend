@@ -159,7 +159,7 @@ export function useCourseProgress(courseId: string | undefined) {
           newCompletedLessons = [...prev.completedLessons, moduleId];
 
           setTimeout(async () => {
-            await (supabase.from("module_completions") as any).insert({
+            await (supabase as any).from("module_completions").insert({
               user_id: user.id,
               module_id: moduleId,
               course_id: courseId,

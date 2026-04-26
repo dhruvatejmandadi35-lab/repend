@@ -140,6 +140,41 @@ export type Database = {
           },
         ]
       }
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          points_awarded: number | null
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          points_awarded?: number | null
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_participations: {
         Row: {
           challenge_id: string
@@ -174,7 +209,9 @@ export type Database = {
       }
       challenges: {
         Row: {
+          attempt_count: number | null
           challenge_type: string | null
+          completion_count: number | null
           created_at: string
           description: string
           difficulty: string | null
@@ -186,6 +223,7 @@ export type Database = {
           lab_data: Json | null
           lab_type: string | null
           objective: string | null
+          points: number | null
           problem: string | null
           solution: string | null
           solution_explanation: string | null
@@ -195,7 +233,9 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          attempt_count?: number | null
           challenge_type?: string | null
+          completion_count?: number | null
           created_at?: string
           description: string
           difficulty?: string | null
@@ -207,6 +247,7 @@ export type Database = {
           lab_data?: Json | null
           lab_type?: string | null
           objective?: string | null
+          points?: number | null
           problem?: string | null
           solution?: string | null
           solution_explanation?: string | null
@@ -216,7 +257,9 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          attempt_count?: number | null
           challenge_type?: string | null
+          completion_count?: number | null
           created_at?: string
           description?: string
           difficulty?: string | null
@@ -228,6 +271,7 @@ export type Database = {
           lab_data?: Json | null
           lab_type?: string | null
           objective?: string | null
+          points?: number | null
           problem?: string | null
           solution?: string | null
           solution_explanation?: string | null
@@ -268,6 +312,42 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      course_cache: {
+        Row: {
+          completion_count: number | null
+          course_data: Json
+          created_at: string | null
+          creator_id: string | null
+          id: string
+          is_public: boolean | null
+          topic: string
+          topic_normalized: string
+          updated_at: string | null
+        }
+        Insert: {
+          completion_count?: number | null
+          course_data: Json
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          topic: string
+          topic_normalized: string
+          updated_at?: string | null
+        }
+        Update: {
+          completion_count?: number | null
+          course_data?: Json
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          is_public?: boolean | null
+          topic?: string
+          topic_normalized?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -439,6 +519,45 @@ export type Database = {
           },
         ]
       }
+      lab_cache: {
+        Row: {
+          created_at: string | null
+          generation_count: number | null
+          id: string
+          is_prebuilt: boolean | null
+          lab_data: Json | null
+          lab_html: string | null
+          lab_type: string | null
+          topic: string
+          topic_normalized: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          generation_count?: number | null
+          id?: string
+          is_prebuilt?: boolean | null
+          lab_data?: Json | null
+          lab_html?: string | null
+          lab_type?: string | null
+          topic: string
+          topic_normalized: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          generation_count?: number | null
+          id?: string
+          is_prebuilt?: boolean | null
+          lab_data?: Json | null
+          lab_html?: string | null
+          lab_type?: string | null
+          topic?: string
+          topic_normalized?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lab_results: {
         Row: {
           completed_at: string | null
@@ -471,6 +590,48 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      module_completions: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          id: string
+          module_id: string
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          id?: string
+          module_id: string
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          id?: string
+          module_id?: string
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_completions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_completions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_comments: {
         Row: {
@@ -585,7 +746,11 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          last_active: string | null
+          points: number | null
           role: string
+          streak: number | null
+          subscription_tier: string | null
           updated_at: string
           user_id: string
         }
@@ -595,7 +760,11 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          last_active?: string | null
+          points?: number | null
           role?: string
+          streak?: number | null
+          subscription_tier?: string | null
           updated_at?: string
           user_id: string
         }
@@ -605,7 +774,11 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          last_active?: string | null
+          points?: number | null
           role?: string
+          streak?: number | null
+          subscription_tier?: string | null
           updated_at?: string
           user_id?: string
         }
