@@ -6,6 +6,8 @@ type Props = {
   onComplete?: (score?: number) => void;
   height?: number;
   title?: string;
+  /** Skip loading overlay — for instantly-available pre-built HTML labs */
+  prebuilt?: boolean;
 };
 
 const LOADING_MESSAGES = [
@@ -80,9 +82,9 @@ function LoadingOverlay() {
 }
 
 /* ─── DynamicLabRenderer ─── */
-export default function DynamicLabRenderer({ html, onComplete, height = 560, title }: Props) {
+export default function DynamicLabRenderer({ html, onComplete, height = 560, title, prebuilt = false }: Props) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(prebuilt);
   const completedRef = useRef(false);
 
   const validationError = validate(html);

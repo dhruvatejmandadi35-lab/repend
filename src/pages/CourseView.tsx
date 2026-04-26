@@ -587,6 +587,7 @@ export default function CourseView() {
                           isCompleted={getSectionDone(mod.id, "lab")}
                           onRetryGeneration={() => triggerLabGeneration(mod.id, true)}
                           onReplay={handleLabReplay}
+                          moduleTitle={mod.title}
                         />
                       )}
 

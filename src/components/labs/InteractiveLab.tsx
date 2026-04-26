@@ -13,6 +13,11 @@ import DebateBuilderLab from "./DebateBuilderLab";
 import BudgetAllocatorLab from "./BudgetAllocatorLab";
 import CohesiveLab from "./CohesiveLab";
 import ArtifactLab from "./ArtifactLab";
+import DynamicLabRenderer from "./DynamicLabRenderer";
+import { matchPrebuiltLab } from "@/lib/labTopicMatcher";
+import { ECONOMICS_SIM_HTML } from "./prebuilt/economicsSimHTML";
+import { BIOLOGY_CELL_HTML } from "./prebuilt/biologyCellHTML";
+import { PHYSICS_PROJECTILE_HTML } from "./prebuilt/physicsProjectileHTML";
 
 type Props = {
   labType?: string | null;
@@ -25,6 +30,8 @@ type Props = {
   isCompleted?: boolean;
   onRetryGeneration?: () => void;
   onReplay?: () => void;
+  /** Module title — used for pre-built lab topic matching */
+  moduleTitle?: string | null;
 };
 
 function LabEmptyState({ labType, detail, onRetry }: { labType?: string | null; detail?: string; onRetry?: () => void }) {
@@ -84,7 +91,50 @@ function LabFailedState({ error, onRetry }: { error?: string | null; onRetry?: (
   );
 }
 
-export default function InteractiveLab({ labType, labData, labTitle, labDescription, labGenerationStatus, labError, onComplete, isCompleted, onRetryGeneration, onReplay }: Props) {
+const PREBUILT_HTML: Record<string, string> = {
+  economics_sim: ECONOMICS_SIM_HTML,
+  biology_cell: BIOLOGY_CELL_HTML,
+  physics_projectile: PHYSICS_PROJECTILE_HTML,
+};
+
+const PREBUILT_TITLES: Record<string, string> = {
+  economics_sim: "Market Equilibrium Explorer",
+  biology_cell: "Build the Cell",
+  physics_projectile: "Projectile Motion Lab",
+};
+
+export default function InteractiveLab({ labType, labData, labTitle, labDescription, labGenerationStatus, labError, onComplete, isCompleted, onRetryGeneration, onReplay, moduleTitle }: Props) {
+  // ── Pre-built lab check (before any API-generated content) ──
+  // Runs immediately — no loading state needed
+  if (moduleTitle && labGenerationStatus !== "pending" && labGenerationStatus !== "generating") {
+    const prebuiltId = matchPrebuiltLab(moduleTitle);
+    if (prebuiltId && PREBUILT_HTML[prebuiltId]) {
+      if (isCompleted) {
+        return (
+          <Card className="border-emerald-500/20 bg-emerald-500/5">
+            <CardContent className="p-8 text-center space-y-3">
+              <div className="text-4xl">🏆</div>
+              <h3 className="font-bold text-lg">Lab Complete!</h3>
+              <p className="text-sm text-muted-foreground">{PREBUILT_TITLES[prebuiltId]}</p>
+              <Button variant="outline" onClick={onReplay}>
+                <RefreshCw className="w-4 h-4 mr-1" /> Replay
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      }
+      return (
+        <DynamicLabRenderer
+          html={PREBUILT_HTML[prebuiltId]}
+          title={PREBUILT_TITLES[prebuiltId]}
+          height={520}
+          prebuilt
+          onComplete={onComplete}
+        />
+      );
+    }
+  }
+
   // Handle generation status states
   if (labGenerationStatus === "pending" || labGenerationStatus === "generating") {
     return <LabPendingState />;
