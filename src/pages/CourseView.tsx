@@ -29,6 +29,7 @@ import AiTutor from "@/components/courses/AiTutor";
 import CourseCompletionScreen from "@/components/courses/CourseCompletionScreen";
 import rependLogo from "@/assets/repend-logo.png";
 import { cn } from "@/lib/utils";
+import ModuleSummaryVideo from "@/components/courses/ModuleSummaryVideo";
 
 type Module = {
   id: string;
@@ -89,7 +90,8 @@ export default function CourseView() {
   const [generatingLabs, setGeneratingLabs] = useState<Set<string>>(new Set());
   const [regeneratingAll, setRegeneratingAll] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  
+  const [showSummaryVideo, setShowSummaryVideo] = useState(false);
+
 
   useEffect(() => {
     if (id) fetchCourse();
@@ -274,6 +276,7 @@ export default function CourseView() {
   const selectItem = (moduleIndex: number, content: ContentType) => {
     setActiveModule(moduleIndex);
     setActiveContent(content);
+    if (moduleIndex !== activeModule) setShowSummaryVideo(false);
   };
 
   /* ─── Loading skeleton ─── */
@@ -465,9 +468,41 @@ export default function CourseView() {
                   </div>
                 ) : (
                   <>
+                    {/* ── Watch Summary Video (shown above lesson card when toggled) ── */}
+                    {activeContent === "lesson" && showSummaryVideo && (
+                      <div className="mb-6">
+                        <ModuleSummaryVideo
+                          title={mod.title}
+                          content={mod.lesson_content}
+                          real_world_application={mod.real_world_application ?? ""}
+                          key_takeaways={mod.key_takeaways ?? []}
+                          topic={course?.title ?? ""}
+                          onStartLab={() => selectItem(activeModule, "lab")}
+                        />
+                        <button
+                          onClick={() => setShowSummaryVideo(false)}
+                          className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          ↑ Hide video
+                        </button>
+                      </div>
+                    )}
+
                     <div className={cn(themeClasses.card, "p-8")}>
                       {activeContent === "lesson" && (
                         <>
+                          {/* ── Watch Summary button (above slides) ── */}
+                          {!showSummaryVideo && (
+                            <div className="flex justify-end mb-5">
+                              <button
+                                onClick={() => setShowSummaryVideo(true)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[13px] font-semibold hover:bg-primary/15 transition-colors"
+                              >
+                                <span>▶</span>
+                                Watch Summary
+                              </button>
+                            </div>
+                          )}
                           <LessonSlides
                             content={mod.lesson_content}
                             youtubeUrl={mod.youtube_url}

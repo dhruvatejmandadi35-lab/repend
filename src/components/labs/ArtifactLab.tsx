@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, RotateCcw, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import DynamicLabRenderer from "./DynamicLabRenderer";
 
 type Props = {
   data: {
@@ -30,13 +31,18 @@ export default function ArtifactLab({ data, onComplete, isCompleted, onReplay }:
     Array.isArray(data.reflection_options) &&
     data.reflection_options.length > 0;
 
-  const finish = () => {
+  const finish = useCallback(() => {
+    if (completionFired) return;
     setPhase("done");
-    if (!completionFired) {
-      onComplete?.();
-      setCompletionFired(true);
-    }
-  };
+    setCompletionFired(true);
+    onComplete?.();
+  }, [completionFired, onComplete]);
+
+  // postMessage completion from the sandboxed iframe
+  const handleIframeComplete = useCallback((_score?: number) => {
+    if (hasReflection) setPhase("reflect");
+    else finish();
+  }, [hasReflection, finish]);
 
   const handleExplored = () => {
     if (hasReflection) setPhase("reflect");
@@ -92,18 +98,12 @@ export default function ArtifactLab({ data, onComplete, isCompleted, onReplay }:
       )}
 
       {/* Sandboxed artifact iframe */}
-      <div style={{ height: 420, position: "relative" }}>
-        <iframe
-          srcDoc={data.html_content}
-          sandbox="allow-scripts"
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
-            background: "#0f172a",
-            display: "block",
-          }}
+      <div style={{ position: "relative" }}>
+        <DynamicLabRenderer
+          html={data.html_content}
           title={data.title}
+          height={420}
+          onComplete={handleIframeComplete}
         />
       </div>
 
