@@ -7,6 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function normalizeTopic(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, " ");
+}
+
 // ─── CLAUDE API CALLER ───
 
 async function callClaude(
@@ -407,16 +411,19 @@ serve(async (req) => {
 
     // ─── PHASE 2: Generate content for a single module ───
     if (phase === 2 && existingCourseId && typeof moduleIndex === "number" && moduleTitle) {
+      const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const topicNormalized = normalizeTopic(topic || moduleTitle);
+      const moduleNormalized = normalizeTopic(moduleTitle);
+
       const allFilePaths: string[] = [];
       if (Array.isArray(filePaths)) allFilePaths.push(...filePaths);
       else if (filePath) allFilePaths.push(filePath);
 
       let fileTextContext = "";
       if (allFilePaths.length > 0) {
-        const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
         for (const fp of allFilePaths) {
-          const content = await extractFileContent(fp, supabaseAdmin);
-          if (content.text) fileTextContext += content.text.slice(0, 10000) + "\n\n";
+          const extracted = await extractFileContent(fp, supabaseAdmin);
+          if (extracted.text) fileTextContext += extracted.text.slice(0, 10000) + "\n\n";
         }
       }
 
@@ -430,10 +437,27 @@ serve(async (req) => {
 
       const totalModules = allModules?.length || 4;
 
-      const content = await generateModuleContent(
-        ANTHROPIC_API_KEY, topic || moduleTitle, moduleTitle,
-        moduleIndex, totalModules, hasFile, fileTextContext, preferences,
-      );
+      // ── Module content cache check ──
+      let content: { lesson_content: string; real_world_application: string; key_takeaways: string[]; quiz: any[] };
+      let fromCache = false;
+
+      const { data: cachedCourse } = await supabaseAdmin
+        .from("course_cache")
+        .select("modules")
+        .eq("topic_normalized", topicNormalized)
+        .maybeSingle();
+
+      const cachedModule = cachedCourse?.modules?.[moduleNormalized];
+      if (cachedModule?.lesson_content) {
+        console.log(`[Module Cache HIT] "${moduleNormalized}" in "${topicNormalized}"`);
+        content = cachedModule;
+        fromCache = true;
+      } else {
+        content = await generateModuleContent(
+          ANTHROPIC_API_KEY, topic || moduleTitle, moduleTitle,
+          moduleIndex, totalModules, hasFile, fileTextContext, preferences,
+        );
+      }
 
       await supabase.from("course_modules").update({
         lesson_content: content.lesson_content,
@@ -441,6 +465,16 @@ serve(async (req) => {
         key_takeaways: content.key_takeaways?.length ? content.key_takeaways : null,
         quiz: content.quiz,
       }).eq("course_id", existingCourseId).eq("module_order", moduleIndex + 1);
+
+      // ── Write module content to cache (skip if file-based or already from cache) ──
+      if (!fromCache && !hasFile) {
+        const updatedModules = { ...(cachedCourse?.modules ?? {}), [moduleNormalized]: content };
+        await supabaseAdmin
+          .from("course_cache")
+          .upsert({ topic_normalized: topicNormalized, modules: updatedModules }, { onConflict: "topic_normalized" })
+          .then(() => console.log(`[Module Cache WRITE] "${moduleNormalized}"`))
+          .catch((e: any) => console.warn("[Course Cache] Module write failed (non-fatal):", e.message));
+      }
 
       console.log(`[Phase 2] Module ${moduleIndex + 1} "${moduleTitle}" done`);
 
@@ -485,9 +519,10 @@ serve(async (req) => {
     if (Array.isArray(filePaths)) allFilePaths.push(...filePaths);
     else if (filePath) allFilePaths.push(filePath);
 
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
     let fileTextContext = "";
     if (allFilePaths.length > 0) {
-      const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       for (const fp of allFilePaths) {
         const content = await extractFileContent(fp, supabaseAdmin);
         if (content.text) fileTextContext += content.text.slice(0, 10000) + "\n\n";
@@ -495,6 +530,7 @@ serve(async (req) => {
     }
 
     const hasFile = fileTextContext.length > 0;
+    const topicNormalized = normalizeTopic(topic);
 
     // Create course with placeholder
     const { data: course, error: courseErr } = await supabase
@@ -505,13 +541,42 @@ serve(async (req) => {
 
     if (courseErr || !course) throw new Error("Failed to create course record");
 
-    // Generate outline
-    const outline = await generateOutline(ANTHROPIC_API_KEY, topic, hasFile, preferences);
+    // ── Outline cache check ──
+    let outline: any;
+    let outlineFromCache = false;
+
+    if (!hasFile) {
+      const { data: cachedCourse } = await supabaseAdmin
+        .from("course_cache")
+        .select("outline")
+        .eq("topic_normalized", topicNormalized)
+        .maybeSingle();
+
+      if (cachedCourse?.outline?.modules?.length > 0) {
+        console.log(`[Outline Cache HIT] "${topicNormalized}"`);
+        outline = cachedCourse.outline;
+        outlineFromCache = true;
+      }
+    }
+
+    if (!outline) {
+      outline = await generateOutline(ANTHROPIC_API_KEY, topic, hasFile, preferences);
+    }
+
     const modules = Array.isArray(outline.modules) ? outline.modules.slice(0, 7) : [];
 
     if (modules.length === 0) throw new Error("Outline generation returned no modules.");
 
     console.log(`[Phase 1] Outline: "${outline.title}" — ${modules.length} modules`);
+
+    // ── Write outline to cache (skip if file-based or already from cache) ──
+    if (!outlineFromCache && !hasFile) {
+      await supabaseAdmin
+        .from("course_cache")
+        .upsert({ topic_normalized: topicNormalized, outline }, { onConflict: "topic_normalized" })
+        .then(() => console.log(`[Outline Cache WRITE] "${topicNormalized}"`))
+        .catch((e: any) => console.warn("[Course Cache] Outline write failed (non-fatal):", e.message));
+    }
 
     // Update course with full metadata from outline
     await supabase.from("courses").update({

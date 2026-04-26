@@ -7,6 +7,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function normalizeTopic(s: string): string {
+  return s.toLowerCase().trim().replace(/\s+/g, " ");
+}
+
 // ─── CLAUDE API CALLER ───
 // Returns the tool input JSON directly after one round-trip.
 
@@ -1164,6 +1168,32 @@ serve(async (req) => {
       }
     }
 
+    // ── Lab cache check ──
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const cacheKey = normalizeTopic(`${topic} ${moduleTitle}`);
+
+    if (!force) {
+      const { data: cachedLab } = await supabaseAdmin
+        .from("lab_cache")
+        .select("lab_type, lab_data")
+        .eq("topic_normalized", cacheKey)
+        .maybeSingle();
+
+      if (cachedLab?.lab_data && Object.keys(cachedLab.lab_data).length > 0) {
+        console.log(`[Lab Cache HIT] "${cacheKey}"`);
+        await supabase.from("course_modules").update({
+          lab_data: cachedLab.lab_data,
+          lab_blueprint: cachedLab.lab_data,
+          lab_type: cachedLab.lab_type,
+          lab_generation_status: "done",
+          lab_error: null,
+        }).eq("id", moduleId);
+        return new Response(JSON.stringify({ status: "cache_hit", blueprint: cachedLab.lab_data }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     await supabase.from("course_modules").update({ lab_generation_status: "generating" }).eq("id", moduleId);
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
@@ -1538,6 +1568,13 @@ Choose the activity type that will best help a high school student truly underst
       lab_generation_status: "done",
       lab_error: null,
     }).eq("id", moduleId);
+
+    // ── Write to lab_cache ──
+    await supabaseAdmin
+      .from("lab_cache")
+      .upsert({ topic_normalized: cacheKey, lab_type: labTypeForDb, lab_data: blueprint }, { onConflict: "topic_normalized" })
+      .then(() => console.log(`[Lab Cache WRITE] "${cacheKey}"`))
+      .catch((e: any) => console.warn("[Lab Cache] Write failed (non-fatal):", e.message));
 
     console.log(`✅ Lab generated: "${moduleTitle}" → type: ${labType}`);
 

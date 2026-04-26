@@ -6,7 +6,19 @@
       "Bash(npx vite:*)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(supabase --version)",
+      "Bash(grep -v \"^$\")",
+      "Bash(supabase status *)",
+      "Bash(supabase functions *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; print\\(json.dumps\\({k:v for k,v in deps.items\\(\\) if 'react' in k or 'remotion' in k}, indent=2\\)\\)\")",
+      "Bash(git fetch *)",
+      "Bash(git restore *)"
     ]
   },
   "hooks": {
