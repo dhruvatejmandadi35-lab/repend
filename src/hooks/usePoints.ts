@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface PointsData {
   totalPoints: number;
@@ -61,11 +63,43 @@ function savePoints(data: PointsData) {
 }
 
 export function usePoints() {
+  const { user } = useAuth();
   const [data, setData] = useState<PointsData>(loadPoints);
 
   useEffect(() => {
     savePoints(data);
   }, [data]);
+
+  // When signed in, prefer the server-side balance on profiles. Refetched on
+  // user change and on window focus so awards landing in other components
+  // (module/challenge completion) are picked up.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    const sync = async () => {
+      const { data: profile } = await (supabase
+        .from("profiles") as any)
+        .select("points, streak, last_active")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled || !profile) return;
+      setData((prev) => checkAchievements({
+        ...prev,
+        totalPoints: profile.points ?? prev.totalPoints,
+        streak: profile.streak ?? prev.streak,
+        lastActiveDate: profile.last_active ?? prev.lastActiveDate,
+      }));
+    };
+
+    sync();
+    const onFocus = () => sync();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [user]);
 
   const updateStreak = useCallback(() => {
     setData((prev) => {

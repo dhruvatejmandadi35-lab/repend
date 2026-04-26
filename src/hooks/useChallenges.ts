@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { awardPoints } from "@/lib/points";
+
+const DEFAULT_CHALLENGE_POINTS = 50;
 
 export interface Challenge {
   id: string;
@@ -19,6 +22,9 @@ export interface Challenge {
   author_avatar_url?: string | null;
   attempts_count?: number;
   completions_count?: number;
+  points?: number | null;
+  attempt_count?: number | null;
+  completion_count?: number | null;
 }
 
 export interface Participation {
@@ -137,16 +143,53 @@ export function useChallenges() {
       p.challenge_id === challengeId ? { ...p, completed_at: now } : p
     ));
 
-    // Award server-side points to solver
+    const challenge = challenges.find(c => c.id === challengeId);
+    const reward = challenge?.points ?? DEFAULT_CHALLENGE_POINTS;
+
+    await (supabase.from("challenge_completions") as any).insert({
+      user_id: user.id,
+      challenge_id: challengeId,
+    });
+
+    // Bump challenge attempt + completion counters. Read-modify-write since
+    // we don't have an increment RPC; concurrent completions may collide.
+    const { data: counts } = await (supabase
+      .from("challenges") as any)
+      .select("attempt_count, completion_count")
+      .eq("id", challengeId)
+      .maybeSingle();
+
+    if (counts) {
+      await (supabase.from("challenges") as any)
+        .update({
+          attempt_count: (counts.attempt_count ?? 0) + 1,
+          completion_count: (counts.completion_count ?? 0) + 1,
+        })
+        .eq("id", challengeId);
+
+      setChallenges(prev => prev.map(c =>
+        c.id === challengeId
+          ? {
+              ...c,
+              attempt_count: (counts.attempt_count ?? 0) + 1,
+              completion_count: (counts.completion_count ?? 0) + 1,
+              attempts_count: (c.attempts_count ?? 0) + 1,
+              completions_count: (c.completions_count ?? 0) + 1,
+            }
+          : c
+      ));
+    }
+
+    await awardPoints(user.id, reward);
+
+    // Legacy event log; profiles.points is now the canonical balance.
     await supabase.from("user_points" as any).insert({
       user_id: user.id,
-      amount: 50,
+      amount: reward,
       reason: "challenge_solved",
       challenge_id: challengeId,
     } as any);
 
-    // Award server-side points to creator
-    const challenge = challenges.find(c => c.id === challengeId);
     if (challenge?.user_id && challenge.user_id !== user.id) {
       await supabase.from("user_points" as any).insert({
         user_id: challenge.user_id,

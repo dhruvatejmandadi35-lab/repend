@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePoints } from "@/hooks/usePoints";
 import { useToast } from "@/hooks/use-toast";
+import { awardPoints } from "@/lib/points";
+
+const MODULE_COMPLETION_POINTS = 10;
 
 export type SectionStatus = { lesson: boolean; lab: boolean; quiz: boolean };
 
@@ -154,6 +157,15 @@ export function useCourseProgress(courseId: string | undefined) {
         let newCompletedLessons = prev.completedLessons;
         if (moduleComplete && !wasAlreadyComplete) {
           newCompletedLessons = [...prev.completedLessons, moduleId];
+
+          setTimeout(async () => {
+            await (supabase.from("module_completions") as any).insert({
+              user_id: user.id,
+              module_id: moduleId,
+              course_id: courseId,
+            });
+            await awardPoints(user.id, MODULE_COMPLETION_POINTS);
+          }, 0);
         }
 
         const allDone = newCompletedLessons.length >= totalModules;
