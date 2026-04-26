@@ -146,7 +146,7 @@ export function useChallenges() {
     const challenge = challenges.find(c => c.id === challengeId);
     const reward = challenge?.points ?? DEFAULT_CHALLENGE_POINTS;
 
-    await (supabase.from("challenge_completions") as any).insert({
+    await (supabase as any).from("challenge_completions").insert({
       user_id: user.id,
       challenge_id: challengeId,
     });
