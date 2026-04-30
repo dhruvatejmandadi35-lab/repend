@@ -18,7 +18,8 @@
       "Bash(python3 -m json.tool)",
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); deps={**d.get\\('dependencies',{}\\),**d.get\\('devDependencies',{}\\)}; print\\(json.dumps\\({k:v for k,v in deps.items\\(\\) if 'react' in k or 'remotion' in k}, indent=2\\)\\)\")",
       "Bash(git fetch *)",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(git reset *)"
     ]
   },
   "hooks": {
