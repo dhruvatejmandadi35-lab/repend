@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const avatarSeeds = ["Aria", "Kai", "Mira", "Noah", "Zane"];
@@ -33,7 +33,7 @@ export function Hero() {
               New
             </span>
             <span className="text-[13px] font-medium text-foreground/85">
-              Interactive labs powered by Claude
+              Interactive AI-generated labs
             </span>
             <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
           </Link>
@@ -85,19 +85,6 @@ export function Hero() {
               </div>
               <span className="text-[13px] text-muted-foreground">
                 <span className="text-foreground font-semibold">5,000+</span> learners
-              </span>
-            </div>
-
-            <div className="hidden sm:block w-px h-5 bg-border/60" />
-
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <span className="text-[13px] text-muted-foreground">
-                <span className="text-foreground font-semibold">4.9</span> avg rating
               </span>
             </div>
 
