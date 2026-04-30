@@ -609,7 +609,6 @@ serve(async (req) => {
 
     // Track usage
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: existing } = await supabaseAdmin
       .from("usage_tracking")
       .select("id, courses_generated, file_courses_generated")
