@@ -26,20 +26,22 @@ export function ValueProp() {
             <p className="text-[13px] font-semibold text-primary uppercase tracking-wider mb-3">
               Why Repend
             </p>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 text-foreground leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 text-foreground leading-[1.1] tracking-[-0.02em]">
               Learning that actually{" "}
               <span className="gradient-text">sticks</span>
             </h2>
             <p className="text-muted-foreground text-base mb-8 leading-relaxed">
-              Static tutorials only get you so far. Repend creates personalized courses with 
+              Static tutorials only get you so far. Repend creates personalized courses with
               interactive decision modules — so you genuinely retain what you learn.
             </p>
-            
+
             <ul className="space-y-3.5">
               {benefits.map((benefit) => (
                 <li key={benefit} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4.5 h-4.5 text-accent mt-0.5 flex-shrink-0" />
-                  <span className="text-foreground/90 text-sm">{benefit}</span>
+                  <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center">
+                    <CheckCircle2 className="w-3 h-3 text-accent" />
+                  </span>
+                  <span className="text-foreground/90 text-sm leading-relaxed">{benefit}</span>
                 </li>
               ))}
             </ul>

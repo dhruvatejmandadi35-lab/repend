@@ -1,10 +1,10 @@
-import { Bot, BookOpen, Trophy, ArrowRight } from "lucide-react";
+import { Bot, BookOpen, Trophy } from "lucide-react";
 
 const steps = [
   {
     icon: BookOpen,
     title: "Generate a Course",
-    description: "Tell the AI what you want to learn. It creates a full course with lessons, quizzes, and interactive labs — instantly.",
+    description: "Tell the AI what you want to learn. It scaffolds a full course with lessons, quizzes, and interactive labs — instantly.",
     step: "01",
   },
   {
@@ -24,42 +24,43 @@ const steps = [
 export function HowItWorks() {
   return (
     <section className="py-24 relative">
-      <div className="absolute inset-0 bg-secondary/30" />
+      <div className="absolute inset-0 bg-secondary/20" />
       <div className="container px-4 sm:px-6 relative">
-        <div className="text-center mb-16">
+        <div className="text-center mb-14 max-w-2xl mx-auto">
           <p className="text-[13px] font-semibold text-primary uppercase tracking-wider mb-3">
             How it works
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4 text-foreground">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4 text-foreground tracking-[-0.02em]">
             Three steps to mastery
           </h2>
-          <p className="text-muted-foreground text-base max-w-lg mx-auto">
-            A streamlined process designed for efficient, effective learning.
+          <p className="text-muted-foreground text-base">
+            A streamlined workflow designed for efficient, effective learning — from cold start to fluent in days.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
-          {steps.map((step, index) => (
+        <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto relative">
+          {/* Connector line — desktop only */}
+          <div className="hidden md:block absolute top-[68px] left-[12%] right-[12%] h-px bg-gradient-to-r from-transparent via-border/60 to-transparent z-0" />
+
+          {steps.map((step) => (
             <div key={step.title} className="relative group">
-              {/* Connector */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:flex absolute top-12 -right-3 z-10">
-                  <ArrowRight className="w-5 h-5 text-border/60" />
-                </div>
-              )}
-              
-              <div className="relative bg-card/80 border border-border/60 rounded-xl p-7 transition-all duration-300 hover:border-primary/20 hover:bg-card group-hover:-translate-y-1 h-full">
+              <div className="relative bg-card/70 backdrop-blur-sm border border-border/60 rounded-xl p-7 transition-all duration-300 hover:border-primary/25 hover:bg-card hover:-translate-y-1 hover:shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.25)] h-full">
                 {/* Step number */}
-                <span className="text-[11px] font-bold text-muted-foreground/40 uppercase tracking-widest mb-4 block">
-                  Step {step.step}
-                </span>
+                <div className="flex items-center justify-between mb-5">
+                  <span className="text-[11px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+                    Step {step.step}
+                  </span>
+                  <span className="font-display text-3xl font-bold text-foreground/[0.06] tracking-[-0.04em] leading-none">
+                    {step.step}
+                  </span>
+                </div>
 
                 {/* Icon */}
-                <div className="w-11 h-11 rounded-lg gradient-primary flex items-center justify-center mb-5">
+                <div className="w-11 h-11 rounded-lg gradient-primary flex items-center justify-center mb-5 shadow-[0_4px_12px_-2px_hsl(var(--primary)/0.4),inset_0_1px_0_rgba(255,255,255,0.18)]">
                   <step.icon className="w-5 h-5 text-primary-foreground" />
                 </div>
 
-                <h3 className="font-display text-lg font-semibold mb-2 text-foreground">{step.title}</h3>
+                <h3 className="font-display text-lg font-semibold mb-2 text-foreground tracking-[-0.01em]">{step.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {step.description}
                 </p>

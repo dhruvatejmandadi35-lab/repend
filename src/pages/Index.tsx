@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Features } from "@/components/landing/Features";
 import { ValueProp } from "@/components/landing/ValueProp";
 import { CTA } from "@/components/landing/CTA";
 import { Button } from "@/components/ui/button";
@@ -31,34 +32,39 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
-        
+        <Features />
+        <HowItWorks />
+        <ValueProp />
+
         {/* Survey CTA Section */}
         <section className="py-20 relative">
-          <div className="absolute inset-0 bg-secondary/20" />
           <div className="container max-w-3xl text-center relative">
-            <p className="text-[13px] font-semibold text-accent uppercase tracking-wider mb-3">
-              Personalize Your Experience
-            </p>
-            <h2 className="font-display text-2xl sm:text-3xl font-bold mb-4 text-foreground">
-              Tell us what you want to learn
-            </h2>
-            <p className="text-muted-foreground text-base mb-8 max-w-lg mx-auto">
-              Take a quick survey so we can tailor your course recommendations and challenge suggestions.
-            </p>
-            <Button 
-              variant="hero" 
-              size="lg" 
-              onClick={handleSurveyClick}
-              className="gap-2"
-            >
-              <ClipboardList className="w-4 h-4" />
-              Take the Survey
-            </Button>
+            <div className="relative bg-card/60 backdrop-blur-sm border border-border/60 rounded-2xl p-10 sm:p-12 overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-accent/[0.08] rounded-full blur-3xl" />
+              <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/[0.08] rounded-full blur-3xl" />
+              <div className="relative">
+                <p className="text-[13px] font-semibold text-accent uppercase tracking-wider mb-3">
+                  Personalize Your Experience
+                </p>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold mb-4 text-foreground tracking-[-0.02em]">
+                  Tell us what you want to learn
+                </h2>
+                <p className="text-muted-foreground text-base mb-8 max-w-lg mx-auto">
+                  Take a quick survey so we can tailor your course recommendations and challenge suggestions.
+                </p>
+                <Button
+                  variant="hero"
+                  size="lg"
+                  onClick={handleSurveyClick}
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  Take the Survey
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
 
-        <HowItWorks />
-        <ValueProp />
         <CTA />
       </main>
       <Footer />
