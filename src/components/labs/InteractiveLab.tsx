@@ -164,11 +164,12 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
   if (effectiveLabType && effectiveLabType in LAB_SCHEMAS) {
     const validation = validateLabData(effectiveLabType, labData);
     if (!validation.ok) {
+      const fail = validation as Extract<typeof validation, { ok: false }>;
       console.error(
-        `[InteractiveLab] schema validation failed for lab_type="${validation.labType}" at "${validation.path}": ${validation.message}`,
-        { issues: validation.issues, labData },
+        `[InteractiveLab] schema validation failed for lab_type="${fail.labType}" at "${fail.path}": ${fail.message}`,
+        { issues: fail.issues, labData },
       );
-      const detail = `lab_type "${effectiveLabType}" failed validation at ${validation.path}: ${validation.message}`;
+      const detail = `lab_type "${effectiveLabType}" failed validation at ${fail.path}: ${fail.message}`;
       return <LabEmptyState labType={effectiveLabType} detail={detail} onRetry={onRetryGeneration} />;
     }
   }
