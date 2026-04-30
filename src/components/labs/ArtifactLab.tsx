@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, RotateCcw, Eye } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RefreshCw, RotateCcw, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DynamicLabRenderer from "./DynamicLabRenderer";
+import { validateLabData } from "@/lib/labSchemas";
 
 type Props = {
   data: {
@@ -19,12 +20,36 @@ type Props = {
   onComplete?: () => void;
   isCompleted?: boolean;
   onReplay?: () => void;
+  onRetryGeneration?: () => void;
 };
 
-export default function ArtifactLab({ data, onComplete, isCompleted, onReplay }: Props) {
+export default function ArtifactLab({ data, onComplete, isCompleted, onReplay, onRetryGeneration }: Props) {
+  const validation = useMemo(() => validateLabData("artifact", data), [data]);
+
   const [phase, setPhase] = useState<"explore" | "reflect" | "done">("explore");
   const [selected, setSelected] = useState<string | null>(null);
   const [completionFired, setCompletionFired] = useState(false);
+
+  if (!validation.ok) {
+    console.error(
+      `[ArtifactLab] schema validation failed at "${validation.path}": ${validation.message}`,
+      { issues: validation.issues, data },
+    );
+    return (
+      <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center space-y-3">
+        <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
+        <h3 className="font-bold text-lg">Lab Data Invalid</h3>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          This lab failed validation at <code className="text-xs">{validation.path}</code>: {validation.message}
+        </p>
+        {onRetryGeneration && (
+          <Button variant="outline" onClick={onRetryGeneration}>
+            <RefreshCw className="w-4 h-4 mr-1" /> Regenerate Lab
+          </Button>
+        )}
+      </div>
+    );
+  }
 
   const hasReflection =
     !!data.reflection_question &&

@@ -18,6 +18,7 @@ import { matchPrebuiltLab } from "@/lib/labTopicMatcher";
 import { ECONOMICS_SIM_HTML } from "./prebuilt/economicsSimHTML";
 import { BIOLOGY_CELL_HTML } from "./prebuilt/biologyCellHTML";
 import { PHYSICS_PROJECTILE_HTML } from "./prebuilt/physicsProjectileHTML";
+import { validateLabData, LAB_SCHEMAS } from "@/lib/labSchemas";
 
 type Props = {
   labType?: string | null;
@@ -159,47 +160,17 @@ export default function InteractiveLab({ labType, labData, labTitle, labDescript
 
   console.log("[InteractiveLab] rendering", { effectiveLabType, labGenerationStatus, labError, lab_data_keys: labData ? Object.keys(labData) : null });
 
-  // Per-type required-field validation
-  const missingFields = (() => {
-    switch (effectiveLabType) {
-      case "simulation": case "dynamic": {
-        const missing = [];
-        if (!Array.isArray(labData.variables) || labData.variables.length === 0) missing.push("variables[]");
-        if (!Array.isArray(labData.blocks) || labData.blocks.length === 0) missing.push("blocks[]");
-        if (!labData.formulas || Object.keys(labData.formulas).length === 0) missing.push("formulas{}");
-        return missing;
-      }
-      case "flowchart":
-        return (!Array.isArray(labData.drop_zones) || labData.drop_zones.length === 0) ? ["drop_zones[]"] : [];
-      case "graph":
-        return (!Array.isArray(labData.sliders) || labData.sliders.length === 0) ? ["sliders[]"] : [];
-      case "code_debugger":
-        return (!labData.starter_code) ? ["starter_code"] : [];
-      case "matching":
-        return (!Array.isArray(labData.pairs) || labData.pairs.length < 2) ? ["pairs[]"] : [];
-      case "ordering":
-        return (!Array.isArray(labData.items) || labData.items.length < 2) ? ["items[]"] : [];
-      case "scenario_builder":
-        return (!labData.narrative || !Array.isArray(labData.blanks)) ? ["narrative", "blanks[]"] : [];
-      case "highlight_select":
-        return (!Array.isArray(labData.items) || labData.items.length === 0) ? ["items[]"] : [];
-      case "debate_builder":
-        return (!Array.isArray(labData.statements) || labData.statements.length === 0) ? ["statements[]"] : [];
-      case "budget_allocator":
-        return (!Array.isArray(labData.categories) || labData.categories.length === 0) ? ["categories[]"] : [];
-      case "cohesive":
-        return (!Array.isArray(labData.activities) || labData.activities.length === 0) ? ["activities[]"] : [];
-      case "artifact":
-        return (!labData.html_content) ? ["html_content"] : [];
-      default:
-        return [];
+  // Schema validation — never render a broken lab silently.
+  if (effectiveLabType && effectiveLabType in LAB_SCHEMAS) {
+    const validation = validateLabData(effectiveLabType, labData);
+    if (!validation.ok) {
+      console.error(
+        `[InteractiveLab] schema validation failed for lab_type="${validation.labType}" at "${validation.path}": ${validation.message}`,
+        { issues: validation.issues, labData },
+      );
+      const detail = `lab_type "${effectiveLabType}" failed validation at ${validation.path}: ${validation.message}`;
+      return <LabEmptyState labType={effectiveLabType} detail={detail} onRetry={onRetryGeneration} />;
     }
-  })();
-
-  if (missingFields.length > 0) {
-    const detail = `lab_type "${effectiveLabType}" is missing required fields: ${missingFields.join(", ")}`;
-    console.error("[InteractiveLab] validation failed —", detail, labData);
-    return <LabEmptyState labType={effectiveLabType} detail={detail} onRetry={onRetryGeneration} />;
   }
 
   // Route to specialized lab renderers

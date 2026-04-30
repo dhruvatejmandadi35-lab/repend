@@ -1,6 +1,7 @@
 // v4 — fix model to claude-sonnet-4-6, log already_done skips
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { validateLabData, LAB_SCHEMAS } from "./labSchemas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -1355,6 +1356,57 @@ Choose the activity type that will best help a high school student truly underst
     }
 
     blueprint.lab_type = blueprint.lab_type || labType;
+
+    // ── ZOD SCHEMA VALIDATION + 1 RETRY ──
+    // If the blueprint doesn't match the schema, ask Claude once more with
+    // the specific validation errors fed back into the prompt. Only retries
+    // for known lab types and skips when we've already fallen back to the
+    // deterministic slider lab.
+    if (LAB_SCHEMAS[labType]) {
+      const v = validateLabData(labType, blueprint);
+      if (!v.ok) {
+        console.warn(`[Schema validation failed] "${moduleTitle}" lab_type=${labType} at ${v.path}: ${v.message}`);
+        const issuesText = v.issues.slice(0, 6).map((i) => `- ${i.path}: ${i.message}`).join("\n");
+        const repairMsg = `${userMsg}
+
+⚠️ Your previous response failed schema validation. Fix these specific problems and regenerate:
+${issuesText}
+
+Return a fully valid blueprint that satisfies the tool's input_schema exactly.`;
+        const toolNameMap: Record<string, string> = {
+          simulation: "create_simulation_lab",
+          flowchart: "create_flowchart_lab",
+          code_debugger: "create_code_debugger_lab",
+          graph: "create_graph_lab",
+          matching: "create_matching_lab",
+          ordering: "create_ordering_lab",
+          scenario_builder: "create_scenario_builder_lab",
+          highlight_select: "create_highlight_select_lab",
+          debate_builder: "create_debate_builder_lab",
+          budget_allocator: "create_budget_allocator_lab",
+          cohesive: "create_cohesive_lab",
+          artifact: "create_artifact_lab",
+        };
+        const forcedTool = toolNameMap[labType];
+        if (forcedTool) {
+          try {
+            const repaired = await callClaude(ANTHROPIC_API_KEY, system, repairMsg, ALL_TOOLS, forcedTool, 1);
+            if (repaired && typeof repaired === "object") {
+              repaired.lab_type = repaired.lab_type || labType;
+              const v2 = validateLabData(labType, repaired);
+              if (v2.ok) {
+                console.log(`[Schema repair OK] "${moduleTitle}"`);
+                blueprint = repaired;
+              } else {
+                console.warn(`[Schema repair still invalid] "${moduleTitle}" at ${v2.path}: ${v2.message}`);
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[Schema repair threw] ${e.message}`);
+          }
+        }
+      }
+    }
 
     // ═══ VALIDATION + NORMALIZATION (simulation only) ═══
     const _warnings: string[] = [];
