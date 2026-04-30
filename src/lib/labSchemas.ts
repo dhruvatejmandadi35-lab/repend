@@ -375,7 +375,7 @@ export interface LabValidationSuccess<T = unknown> {
 
 export type LabValidationResult<T = unknown> = LabValidationSuccess<T> | LabValidationFailure;
 
-export function validateLabData(labType: string | null | undefined, data: unknown): LabValidationResult {
+export function validateLabData(labType: string | null | undefined, data: unknown): LabValidationResult<unknown> {
   if (!labType || !(labType in LAB_SCHEMAS)) {
     return {
       ok: false,
