@@ -31,16 +31,17 @@ export default function ArtifactLab({ data, onComplete, isCompleted, onReplay, o
   const [completionFired, setCompletionFired] = useState(false);
 
   if (!validation.ok) {
+    const fail = validation as Extract<typeof validation, { ok: false }>;
     console.error(
-      `[ArtifactLab] schema validation failed at "${validation.path}": ${validation.message}`,
-      { issues: validation.issues, data },
+      `[ArtifactLab] schema validation failed at "${fail.path}": ${fail.message}`,
+      { issues: fail.issues, data },
     );
     return (
       <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center space-y-3">
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto" />
         <h3 className="font-bold text-lg">Lab Data Invalid</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          This lab failed validation at <code className="text-xs">{validation.path}</code>: {validation.message}
+          This lab failed validation at <code className="text-xs">{fail.path}</code>: {fail.message}
         </p>
         {onRetryGeneration && (
           <Button variant="outline" onClick={onRetryGeneration}>
