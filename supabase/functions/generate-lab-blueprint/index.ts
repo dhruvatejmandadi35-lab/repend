@@ -1171,6 +1171,8 @@ serve(async (req) => {
 
     // ── Lab cache check ──
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const topic = course.topic;
+    const moduleTitle = mod.title;
     const cacheKey = normalizeTopic(`${topic} ${moduleTitle}`);
 
     if (!force) {
@@ -1200,8 +1202,6 @@ serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not set in Supabase secrets.");
 
-    const topic = course.topic;
-    const moduleTitle = mod.title;
     const labConcept = mod.lab_description || mod.title;
     const lessonContent = mod.lesson_content || "";
     const lessonSummary = lessonContent.replace(/\n---\n/g, "\n").replace(/#{1,3}\s/g, "").slice(0, 3000);
