@@ -61,13 +61,15 @@ export default function Courses() {
   }, [user]);
 
   const fetchCourses = async () => {
-    const { data, error } = await supabase.from("courses").select("*").is("deleted_at" as any, null).order("created_at", { ascending: false });
+    if (!user) return;
+    const { data, error } = await supabase.from("courses").select("*").eq("user_id", user.id).is("deleted_at" as any, null).order("created_at", { ascending: false });
     if (!error && data) setCourses(data);
     setLoading(false);
   };
 
   const fetchDeletedCourses = async () => {
-    const { data } = await supabase.from("courses").select("*").not("deleted_at" as any, "is", null).order("created_at", { ascending: false });
+    if (!user) return;
+    const { data } = await supabase.from("courses").select("*").eq("user_id", user.id).not("deleted_at" as any, "is", null).order("created_at", { ascending: false });
     if (data) setDeletedCourses(data as any);
   };
 
