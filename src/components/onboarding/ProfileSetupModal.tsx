@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileSetupModalProps {
   open: boolean;
@@ -22,7 +23,7 @@ export function ProfileSetupModal({ open, onComplete }: ProfileSetupModalProps) 
   const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
 
     localStorage.setItem(
@@ -32,6 +33,12 @@ export function ProfileSetupModal({ open, onComplete }: ProfileSetupModalProps) 
         bio,
       }),
     );
+
+    if (user) {
+      await supabase
+        .from("profiles")
+        .upsert({ user_id: user.id, full_name: fullName.trim(), bio }, { onConflict: "user_id" });
+    }
 
     setTimeout(() => {
       setSaving(false);

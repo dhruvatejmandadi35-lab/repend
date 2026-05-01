@@ -1624,7 +1624,7 @@ Return a fully valid blueprint that satisfies the tool's input_schema exactly.`;
     // ── Write to lab_cache ──
     await supabaseAdmin
       .from("lab_cache")
-      .upsert({ topic_normalized: cacheKey, lab_type: labTypeForDb, lab_data: blueprint }, { onConflict: "topic_normalized" })
+      .upsert({ topic: `${topic} ${moduleTitle}`, topic_normalized: cacheKey, lab_type: labTypeForDb, lab_data: blueprint }, { onConflict: "topic_normalized" })
       .then(() => console.log(`[Lab Cache WRITE] "${cacheKey}"`))
       .catch((e: any) => console.warn("[Lab Cache] Write failed (non-fatal):", e.message));
 

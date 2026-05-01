@@ -471,7 +471,7 @@ serve(async (req) => {
         const updatedModules = { ...(cachedCourse?.modules ?? {}), [moduleNormalized]: content };
         await supabaseAdmin
           .from("course_cache")
-          .upsert({ topic_normalized: topicNormalized, modules: updatedModules }, { onConflict: "topic_normalized" })
+          .upsert({ topic: topic || moduleTitle, topic_normalized: topicNormalized, modules: updatedModules }, { onConflict: "topic_normalized" })
           .then(() => console.log(`[Module Cache WRITE] "${moduleNormalized}"`))
           .catch((e: any) => console.warn("[Course Cache] Module write failed (non-fatal):", e.message));
       }
@@ -573,7 +573,7 @@ serve(async (req) => {
     if (!outlineFromCache && !hasFile) {
       await supabaseAdmin
         .from("course_cache")
-        .upsert({ topic_normalized: topicNormalized, outline }, { onConflict: "topic_normalized" })
+        .upsert({ topic: topic.trim(), topic_normalized: topicNormalized, outline }, { onConflict: "topic_normalized" })
         .then(() => console.log(`[Outline Cache WRITE] "${topicNormalized}"`))
         .catch((e: any) => console.warn("[Course Cache] Outline write failed (non-fatal):", e.message));
     }

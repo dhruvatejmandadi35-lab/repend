@@ -61,6 +61,14 @@ type Course = {
 
 type ContentType = "lesson" | "lab" | "quiz";
 
+const normalizeModule = (module: any): Module => ({
+  ...module,
+  quiz: Array.isArray(module.quiz) ? module.quiz : [],
+  key_takeaways: Array.isArray(module.key_takeaways)
+    ? module.key_takeaways.filter((item: unknown): item is string => typeof item === "string")
+    : null,
+});
+
 const PASS_THRESHOLD = 0.7;
 
 /* ─── Themed wrapper classes ─── */
@@ -114,7 +122,7 @@ export default function CourseView() {
         .eq("course_id", id)
         .order("module_order");
       if (data) {
-        const parsed = data.map((m: any) => ({ ...m, quiz: Array.isArray(m.quiz) ? m.quiz : [] }));
+        const parsed = data.map(normalizeModule);
         setModules(parsed);
         const stillGenerating = parsed.some((m: any) => m.lesson_content.startsWith("⏳"));
         if (!stillGenerating) {
@@ -143,7 +151,7 @@ export default function CourseView() {
       return;
     }
     setCourse(courseRes.data);
-    const parsed = (modulesRes.data || []).map((m: any) => ({ ...m, quiz: Array.isArray(m.quiz) ? m.quiz : [] }));
+    const parsed = (modulesRes.data || []).map(normalizeModule);
     setModules(parsed);
     setLoading(false);
 
@@ -182,7 +190,7 @@ export default function CourseView() {
           .eq("id", moduleId)
           .single();
         if (data) {
-          setModules(prev => prev.map(m => m.id === moduleId ? { ...data, quiz: Array.isArray(data.quiz) ? data.quiz : [] } : m));
+          setModules(prev => prev.map(m => m.id === moduleId ? normalizeModule(data) : m));
         }
       } else {
         // Edge function failed — reset to previous state so lab doesn't get stuck as "pending"

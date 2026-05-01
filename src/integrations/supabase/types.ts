@@ -318,33 +318,39 @@ export type Database = {
       course_cache: {
         Row: {
           completion_count: number | null
-          course_data: Json
+          course_data: Json | null
           created_at: string | null
           creator_id: string | null
           id: string
           is_public: boolean | null
+          modules: Json | null
+          outline: Json | null
           topic: string
           topic_normalized: string
           updated_at: string | null
         }
         Insert: {
           completion_count?: number | null
-          course_data: Json
+          course_data?: Json | null
           created_at?: string | null
           creator_id?: string | null
           id?: string
           is_public?: boolean | null
+          modules?: Json | null
+          outline?: Json | null
           topic: string
           topic_normalized: string
           updated_at?: string | null
         }
         Update: {
           completion_count?: number | null
-          course_data?: Json
+          course_data?: Json | null
           created_at?: string | null
           creator_id?: string | null
           id?: string
           is_public?: boolean | null
+          modules?: Json | null
+          outline?: Json | null
           topic?: string
           topic_normalized?: string
           updated_at?: string | null
@@ -357,16 +363,19 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          key_takeaways: Json | null
           lab_blueprint: Json | null
           lab_data: Json | null
           lab_description: string | null
           lab_error: string | null
           lab_generation_status: string
+          lab_prompt: string | null
           lab_title: string | null
           lab_type: string | null
           lesson_content: string
           module_order: number
           quiz: Json | null
+          real_world_application: string | null
           title: string
           youtube_title: string | null
           youtube_url: string | null
@@ -376,16 +385,19 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          key_takeaways?: Json | null
           lab_blueprint?: Json | null
           lab_data?: Json | null
           lab_description?: string | null
           lab_error?: string | null
           lab_generation_status?: string
+          lab_prompt?: string | null
           lab_title?: string | null
           lab_type?: string | null
           lesson_content: string
           module_order: number
           quiz?: Json | null
+          real_world_application?: string | null
           title: string
           youtube_title?: string | null
           youtube_url?: string | null
@@ -395,16 +407,19 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          key_takeaways?: Json | null
           lab_blueprint?: Json | null
           lab_data?: Json | null
           lab_description?: string | null
           lab_error?: string | null
           lab_generation_status?: string
+          lab_prompt?: string | null
           lab_title?: string | null
           lab_type?: string | null
           lesson_content?: string
           module_order?: number
           quiz?: Json | null
+          real_world_application?: string | null
           title?: string
           youtube_title?: string | null
           youtube_url?: string | null
@@ -462,15 +477,19 @@ export type Database = {
       }
       courses: {
         Row: {
+          completion_count: number | null
           created_at: string
           deleted_at: string | null
           description: string | null
+          difficulty: string | null
+          estimated_time: string | null
           id: string
           is_public: boolean
           is_published: boolean
           parent_course_id: string | null
           published_by: string | null
           status: string
+          subject_category: string | null
           title: string
           topic: string
           updated_at: string
@@ -478,15 +497,19 @@ export type Database = {
           version: number
         }
         Insert: {
+          completion_count?: number | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          difficulty?: string | null
+          estimated_time?: string | null
           id?: string
           is_public?: boolean
           is_published?: boolean
           parent_course_id?: string | null
           published_by?: string | null
           status?: string
+          subject_category?: string | null
           title: string
           topic: string
           updated_at?: string
@@ -494,15 +517,19 @@ export type Database = {
           version?: number
         }
         Update: {
+          completion_count?: number | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
+          difficulty?: string | null
+          estimated_time?: string | null
           id?: string
           is_public?: boolean
           is_published?: boolean
           parent_course_id?: string | null
           published_by?: string | null
           status?: string
+          subject_category?: string | null
           title?: string
           topic?: string
           updated_at?: string

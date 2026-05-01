@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -8,7 +8,7 @@ import { Features } from "@/components/landing/Features";
 import { ValueProp } from "@/components/landing/ValueProp";
 import { CTA } from "@/components/landing/CTA";
 import { Button } from "@/components/ui/button";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Loader2 } from "lucide-react";
 import { SurveyModal } from "@/components/survey/SurveyModal";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,10 +17,16 @@ const Index = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to /courses immediately
+  useEffect(() => {
+    if (!loading && user) navigate("/courses", { replace: true });
+  }, [loading, navigate, user]);
+
   if (!loading && user) {
-    navigate("/courses", { replace: true });
-    return null;
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleSurveyClick = () => {
