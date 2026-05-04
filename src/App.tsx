@@ -3,7 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -31,6 +32,19 @@ import LabsPreview from "./pages/LabsPreview";
 
 const queryClient = new QueryClient();
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">
+        Loading...
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -51,7 +65,7 @@ const App = () => (
             <Route path="/courses/:id" element={<CourseView />} />
 
             {/* Dashboard pages — persistent sidebar */}
-            <Route element={<DashboardLayout />}>
+            <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route path="/courses" element={<Courses />} />
               <Route path="/courses/create" element={<CourseCreator />} />
               <Route path="/courses/explore" element={<PublicCourses />} />
