@@ -60,9 +60,18 @@ export default function Signup() {
     setLoading(false);
 
     if (error) {
+      const msg = error.message || "";
+      let friendly = "Unable to create account. Please try again.";
+      if (/already registered|already exists|user exists/i.test(msg)) {
+        friendly = "An account with this email already exists. Try logging in instead.";
+      } else if (/invalid email/i.test(msg)) {
+        friendly = "Please enter a valid email address.";
+      } else if (/password/i.test(msg) && /weak|short|pwned|leaked|breach/i.test(msg)) {
+        friendly = "Please choose a stronger password.";
+      }
       toast({
         title: "Signup failed",
-        description: error.message,
+        description: friendly,
         variant: "destructive",
       });
     } else {
