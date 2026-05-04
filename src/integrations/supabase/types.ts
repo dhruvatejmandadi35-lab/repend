@@ -1063,6 +1063,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_challenge_solution: {
+        Args: { _challenge_id: string }
+        Returns: {
+          hints: Json
+          solution: string
+          solution_explanation: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
