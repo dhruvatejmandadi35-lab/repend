@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,24 +10,72 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // ── Auth: require a valid signed-in user ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { messages, moduleTitle, courseTitle, currentSlideContent, slideIndex, totalSlides, activeSection } = await req.json();
+
+    // ── Input validation ──
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid messages" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (messages.length > 50) {
+      return new Response(JSON.stringify({ error: "Too many messages" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    for (const msg of messages) {
+      if (!msg || typeof msg.content !== "string" || msg.content.length > 2000) {
+        return new Response(JSON.stringify({ error: "Message too long or malformed" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!["user", "assistant", "system"].includes(msg.role)) {
+        return new Response(JSON.stringify({ error: "Invalid role" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+    const safeModuleTitle = String(moduleTitle ?? "").slice(0, 200);
+    const safeCourseTitle = String(courseTitle ?? "").slice(0, 200);
+    const safeSlide = currentSlideContent ? String(currentSlideContent).slice(0, 1500) : "";
+    const safeSection = activeSection ? String(activeSection).slice(0, 50) : "";
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
 
     // Build context-aware system prompt
     let contextBlock = "";
-    if (currentSlideContent) {
+    if (safeSlide) {
       contextBlock = `\n\n## Current Slide (${slideIndex + 1}/${totalSlides})
 \`\`\`
-${currentSlideContent.slice(0, 1500)}
+${safeSlide}
 \`\`\``;
     }
-    if (activeSection) {
-      contextBlock += `\nThe student is in the ${activeSection} section.`;
+    if (safeSection) {
+      contextBlock += `\nThe student is in the ${safeSection} section.`;
     }
 
     const systemPrompt = `You are an expert AI tutor on the Repend learning platform.
-You are helping a student with "${moduleTitle}" in the course "${courseTitle}".
+You are helping a student with "${safeModuleTitle}" in the course "${safeCourseTitle}".
 ${contextBlock}
 
 ## Response Rules
